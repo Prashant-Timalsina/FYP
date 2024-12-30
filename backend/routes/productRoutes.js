@@ -1,8 +1,9 @@
 import express from "express";
 import upload from "../middlewares/multer.js";
+
 import {
   addProduct,
-  aProduct,
+  singleProduct,
   listProduct,
   removeProduct,
 } from "../controllers/productController.js";
@@ -22,7 +23,7 @@ productRouter.post(
 );
 
 // Get a single product by ID (GET request for reading a resource)
-productRouter.get("/single/:id", aProduct);
+productRouter.get("/single/:id", singleProduct);
 
 // List all products (GET request for reading multiple resources)
 productRouter.get("/list", listProduct);
