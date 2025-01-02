@@ -15,8 +15,8 @@ const productSchema = new mongoose.Schema(
     },
     image: { type: Array, required: true },
     category: {
-      type: String,
-      required: [true, "Add Furniture Category"],
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Category",
     },
     woodName: {
       type: String,
