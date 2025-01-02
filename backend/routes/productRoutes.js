@@ -6,6 +6,7 @@ import {
   singleProduct,
   listProduct,
   removeProduct,
+  updateProduct,
 } from "../controllers/productController.js";
 
 const productRouter = express.Router();
@@ -20,6 +21,18 @@ productRouter.post(
     { name: "image4", maxCount: 1 },
   ]),
   addProduct
+);
+
+// Update a product (PUT request for updating a resource)
+productRouter.put(
+  "/update/:id",
+  upload.fields([
+    { name: "image1", maxCount: 1 },
+    { name: "image2", maxCount: 1 },
+    { name: "image3", maxCount: 1 },
+    { name: "image4", maxCount: 1 },
+  ]),
+  updateProduct
 );
 
 // Get a single product by ID (GET request for reading a resource)
