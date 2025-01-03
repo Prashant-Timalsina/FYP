@@ -5,6 +5,7 @@ import dbConnect from "./config/dbConnect.js";
 import connectCloudinary from "./config/cloudinary.js";
 import productRouter from "./routes/productRoutes.js";
 import categoryRouter from "./routes/categoryRoutes.js";
+import userController from "./controllers/userController.js";
 
 const app = express();
 const port = process.env.PORT || 4000;
