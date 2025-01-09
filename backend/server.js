@@ -5,7 +5,7 @@ import dbConnect from "./config/dbConnect.js";
 import connectCloudinary from "./config/cloudinary.js";
 import productRouter from "./routes/productRoutes.js";
 import categoryRouter from "./routes/categoryRoutes.js";
-import userController from "./controllers/userController.js";
+import userRouter from "./routes/userRoutes.js";
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -20,6 +20,7 @@ app.use(cors());
 // API endpoints
 app.use("/api/product", productRouter);
 app.use("/api/category", categoryRouter);
+app.use("/api/user", userRouter);
 
 app.get("/", (req, res) => {
   res.send("API working");
