@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import { mongoose } from "mongoose";
 
 // Define the User Schema
 const userSchema = new mongoose.Schema(
@@ -17,7 +17,7 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: [true, "Enter Product price"],
+      required: [true, "Enter Password"],
       minLength: [6, "Password should be more then 6 letters"],
     },
     cartData: { type: Object, default: {} },

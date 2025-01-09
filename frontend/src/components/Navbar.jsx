@@ -1,13 +1,16 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { assets } from "../assets/assets.js"; // Adjust the path based on your folder structure
+import { ShopContext } from "../context/ShopContext";
 
 const Navbar = () => {
+  const { navigate } = useContext(ShopContext);
   const [visible, setVisible] = useState(false);
-  const [dropdownVisible, setDropdownVisible] = useState(false);
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const logOut = () => {
+    setToken(null);
+    localStorage.removeItem("token");
     navigate("/login");
   };
 
@@ -47,20 +50,29 @@ const Navbar = () => {
             src={assets.profile}
             className="w-6 cursor-pointer"
             alt="Profile icon"
-            onClick={() => setDropdownVisible(!dropdownVisible)}
+            onClick={() => setVisible(!visible)}
           />
 
-          {dropdownVisible && (
+          {setVisible && (
             <div className="absolute right-0 pt-3">
               <div className="flex flex-col px-5 gap-2 w-32 bg-slate-200 rounded">
                 <p className="cursor-pointer hover:underline ">My Profile</p>
                 <p
                   className="cursor-pointer hover:underline "
-                  onClick={() => navigate("/orders")}
+                  onClick={() => {
+                    navigate("/orders");
+                    setVisible(false);
+                  }}
                 >
                   Orders
                 </p>
-                <p onClick={logOut} className="cursor-pointer hover:underline ">
+                <p
+                  onClick={() => {
+                    logOut();
+                    setVisible(false);
+                  }}
+                  className="cursor-pointer hover:underline "
+                >
                   Log Out
                 </p>
               </div>

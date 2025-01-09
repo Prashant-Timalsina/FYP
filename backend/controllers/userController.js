@@ -8,17 +8,26 @@ const createToken = (id) => {
 };
 
 // CREATE: Create a new user
-const createUser = async (req, res) => {
+export const createUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
+    // // Log the received input data
+    // console.log("Received data:", { name, email, password });
+
     // Check if user already exists
-    const userAvailable = await userModel.findOne({ email });
-    if (userAvailable) {
-      return res.status(400).json({
-        success: false,
-        message: "User already registered",
-      });
+    const existingUser = await userModel.findOne({ email });
+    if (existingUser) {
+      return res
+        .status(409)
+        .json({ success: false, message: "User already exists" });
+    }
+
+    // Validate input data
+    if (!name || !email || !password) {
+      return res
+        .status(400)
+        .json({ success: false, message: "All fields are required" });
     }
 
     // Validate email format
@@ -34,13 +43,6 @@ const createUser = async (req, res) => {
         success: false,
         message: "Password must be at least 6 characters long",
       });
-    }
-
-    // Validate required fields
-    if (!name || !email || !password) {
-      return res
-        .status(400)
-        .json({ message: "Name, email, and password are required." });
     }
 
     // Hash the password
@@ -72,38 +74,87 @@ const createUser = async (req, res) => {
   }
 };
 
-// READ: Get user by email
-const loginUser = async (req, res) => {
-  try {
-    const { email, password } = req.params;
+// LOGIN: Authenticate user and generate token
+export const loginUser = async (req, res) => {
+  const { email, password } = req.body;
 
-    const user = await userModel.findOne({ email });
+  // Validate input data
+  if (!email || !password) {
+    return res.status(400).json({
+      success: false,
+      message: "Email and password are required",
+    });
+  }
+
+  // Find the user by email
+  const user = await userModel.findOne({ email });
+  if (!user) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid email or password",
+    });
+  }
+
+  // Compare the provided password with the stored hashed password
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (isMatch) {
+    const token = createToken(user._id);
+    return res.status(200).json({ success: true, token });
+  } else {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid email or password",
+    });
+  }
+};
+
+// UPDATE: Update user details
+export const updateUser = async (req, res) => {
+  try {
+    const { userId } = req.body;
+    const { name, email, password } = req.body;
+
+    // Validate input data
+    if (!name && !email && !password) {
+      return res.status(400).json({
+        success: false,
+        message: "At least one field is required to update",
+      });
+    }
+
+    // Find the user by ID
+    const user = await userModel.findById(userId);
     if (!user) {
       return res
         .status(404)
         .json({ success: false, message: "User not found" });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (isMatch) {
-      const token = createToken(user._id);
-      return res.status(200).json({ success: true, token });
-    } else {
-      res.status(400).json({
-        success: false,
-        message: "Invalid email or password",
-      });
+    // Update user details
+    if (name) user.name = name;
+    if (email) user.email = email;
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(password, salt);
     }
 
-    return res.status(200).json({ message: "User found", user });
+    // Save updated user to the database
+    const updatedUser = await user.save();
+
+    // Respond with success and the updated user
+    res.status(200).json({
+      success: true,
+      message: "User updated successfully",
+      updatedUser,
+    });
   } catch (error) {
-    console.error("Error fetching user:", error);
+    console.error("Error updating user:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };
 
 // READ: Get all users
-const getAllUsers = async (req, res) => {
+export const getAllUsers = async (req, res) => {
   try {
     const users = await userModel.find();
     return res.status(200).json({ message: "All users", users });
@@ -114,11 +165,11 @@ const getAllUsers = async (req, res) => {
 };
 
 // DELETE: Delete a user by ID
-const deleteUser = async (req, res) => {
+export const deleteUser = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { id } = req.params;
 
-    const deletedUser = await userModel.findByIdAndDelete(userId);
+    const deletedUser = await userModel.findByIdAndDelete(id);
     if (!deletedUser) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -130,11 +181,4 @@ const deleteUser = async (req, res) => {
     console.error("Error deleting user:", error);
     return res.status(500).json({ message: "Server error" });
   }
-};
-
-export default {
-  createUser,
-  loginUser,
-  getAllUsers,
-  deleteUser,
 };

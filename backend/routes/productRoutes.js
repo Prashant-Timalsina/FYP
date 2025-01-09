@@ -8,6 +8,7 @@ import {
   removeProduct,
   updateProduct,
 } from "../controllers/productController.js";
+import authUser from "../middlewares/UserAuth.js";
 
 const productRouter = express.Router();
 
