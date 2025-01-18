@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { backendUrl } from "../App";
+import { useNavigate } from "react-router-dom";
 
 const List = () => {
   const [products, setProducts] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -22,11 +24,14 @@ const List = () => {
     fetchProducts();
   }, []);
 
+  const handleShowProduct = (id) => {
+    navigate(`/product/${id}`);
+  };
+
   const handleDelete = async (id) => {
     try {
       const response = await axios.delete(`${backendUrl}/api/product/remove/${id}`);
       if (response.data.success) {
-        // Remove the deleted product from the state
         setProducts((prevProducts) =>
           prevProducts.filter((product) => product._id !== id)
         );
@@ -64,7 +69,13 @@ const List = () => {
                 alt={product.name}
                 className="w-12 h-12 object-cover"
               />
-              <p>{product.name}</p>
+              {/* Clickable product name */}
+              <p
+                onClick={() => handleShowProduct(product._id)}
+                className="text-blue-500 cursor-pointer hover:underline"
+              >
+                {product.name}
+              </p>
               <p>{product.category.name}</p>
               <p>${product.price}</p>
               <div className="flex flex-col">
