@@ -43,7 +43,9 @@ const AddProduct = ({ token }) => {
     setImage(e.target.files[0]);
   };
 
-  const handleReviewSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
     const formData = new FormData();
     formData.append("name", name);
     formData.append("description", description);
@@ -54,16 +56,16 @@ const AddProduct = ({ token }) => {
     formData.append("breadth", breadth);
     formData.append("height", height);
 
-    image1 && formData.append("image", image1);
-    image2 && formData.append("image", image2);
-    image3 && formData.append("image", image3);
-    image4 && formData.append("image", image4);
+    image1 && formData.append("image1", image1);
+    image2 && formData.append("image2", image2);
+    image3 && formData.append("image3", image3);
+    image4 && formData.append("image4", image4);
 
     try {
       const response = await axios.post(
         `${backendUrl}/api/product/add`,
-        formData,
-        { headers: { Authorization: `Bearer ${token}` } }
+        formData
+        // { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (response.data.success) {
@@ -89,13 +91,8 @@ const AddProduct = ({ token }) => {
         "Error in form submission: ",
         error.response?.data || error.message
       );
-      toast.error(error.message);
+      toast.error(error.response?.data?.message || error.message);
     }
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    handleReviewSubmit();
   };
 
   return (
