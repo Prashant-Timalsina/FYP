@@ -1,12 +1,12 @@
 import React, { useContext, useState } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
-import { assets } from "../assets/assets.js"; // Adjust the path based on your folder structure
+import { Link, NavLink } from "react-router-dom";
+import { assets } from "../assets/assets";
 import { ShopContext } from "../context/ShopContext";
 
 const Navbar = () => {
-  const { navigate } = useContext(ShopContext);
+  const { navigate, setShowSearch } = useContext(ShopContext);
   const [visible, setVisible] = useState(false);
-  // const navigate = useNavigate();
+  const [menuVisible, setMenuVisible] = useState(false);
 
   const logOut = () => {
     setToken(null);
@@ -20,22 +20,22 @@ const Navbar = () => {
         <img src={assets.logo} className="w-36" alt="Logo" />
       </Link>
 
-      <ul className="hidden sm:flex gap-5 text-sm text-gray-700">
+      <ul className="hidden md:flex gap-5 text-sm text-gray-700">
         <NavLink to="/" className="flex flex-col items-center gap-1">
           <p>HOME</p>
           <hr className="w-2/4 border-none h-[1.5px] bg-gray-700 hidden" />
         </NavLink>
         <NavLink to="/collection" className="flex flex-col items-center gap-1">
           <p>COLLECTION</p>
-          <hr className="w-2/4 border-none h-[1.5px] bg-gray-700 " hidden />
+          <hr className="w-2/4 border-none h-[1.5px] bg-gray-700 hidden" />
         </NavLink>
         <NavLink to="/about" className="flex flex-col items-center gap-1">
           <p>ABOUT</p>
-          <hr className="w-2/4 border-none h-[1.5px] bg-gray-700 " hidden />
+          <hr className="w-2/4 border-none h-[1.5px] bg-gray-700 hidden" />
         </NavLink>
         <NavLink to="/contact" className="flex flex-col items-center gap-1">
           <p>CONTACT</p>
-          <hr className="w-2/4 border-none h-[1.5px] bg-gray-700 " hidden />
+          <hr className="w-2/4 border-none h-[1.5px] bg-gray-700 hidden" />
         </NavLink>
       </ul>
 
@@ -44,6 +44,7 @@ const Navbar = () => {
           src={assets.search}
           className="w-6 cursor-pointer"
           alt="Search icon"
+          onClick={() => setShowSearch(true)}
         />
         <div className="relative">
           <img
@@ -53,7 +54,7 @@ const Navbar = () => {
             onClick={() => setVisible(!visible)}
           />
 
-          {setVisible && (
+          {visible && (
             <div className="absolute right-0 pt-3">
               <div className="flex flex-col px-5 gap-2 w-32 bg-slate-200 rounded">
                 <p className="cursor-pointer hover:underline ">My Profile</p>
@@ -92,8 +93,8 @@ const Navbar = () => {
         </Link>
 
         <img
-          className="w-5 cursor-pointer sm:hidden"
-          onClick={() => setVisible(true)}
+          className="w-5 cursor-pointer md:hidden"
+          onClick={() => setMenuVisible(!menuVisible)}
           src={assets.menu}
           alt="Menu icon"
         />
@@ -101,42 +102,42 @@ const Navbar = () => {
 
       {/* Sidebar for small screens */}
       <div
-        className={`fixed top-0 right-0 bottom-0 bg-white transition-all duration-300 overflow-hidden z-50 sm:hidden ${
-          visible ? "w-full" : "w-0"
+        className={`fixed top-0 right-0 bottom-0 bg-white transition-all duration-300 overflow-hidden z-50 md:hidden ${
+          menuVisible ? "w-full" : "w-0"
         }`}
       >
         <div className="flex flex-col text-gray-800 h-full">
           <div
             className="flex items-center gap-4 p-3 cursor-pointer"
-            onClick={() => setVisible(false)}
+            onClick={() => setMenuVisible(false)}
           >
             <img className="h-5" src={assets.back} alt="Back button" />
             <p>Back</p>
           </div>
 
           <NavLink
-            onClick={() => setVisible(false)}
+            onClick={() => setMenuVisible(false)}
             className="py-2 px-6 border-t"
             to="/"
           >
             HOME
           </NavLink>
           <NavLink
-            onClick={() => setVisible(false)}
+            onClick={() => setMenuVisible(false)}
             className="py-2 px-6 border-t"
             to="/collection"
           >
             COLLECTION
           </NavLink>
           <NavLink
-            onClick={() => setVisible(false)}
+            onClick={() => setMenuVisible(false)}
             className="py-2 px-6 border-t"
             to="/about"
           >
             ABOUT
           </NavLink>
           <NavLink
-            onClick={() => setVisible(false)}
+            onClick={() => setMenuVisible(false)}
             className="py-2 px-6 border-t"
             to="/contact"
           >

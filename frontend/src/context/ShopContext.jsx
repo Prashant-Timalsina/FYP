@@ -7,6 +7,8 @@ const ShopContextProvider = (props) => {
   const currency = "$";
   const delivery_fee = 10;
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  const [search, setSearch] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
   const [token, setToken] = useState(localStorage.getItem("token") || "");
   const navigate = useNavigate();
 
@@ -17,6 +19,10 @@ const ShopContextProvider = (props) => {
 
   const value = {
     navigate,
+    search,
+    setSearch,
+    showSearch,
+    setShowSearch,
     token,
     setToken,
     currency,

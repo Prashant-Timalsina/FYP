@@ -25,14 +25,17 @@ const addProduct = async (req, res) => {
       (item) => item !== undefined
     );
 
-    let imagesURL = await Promise.all(
-      images.map(async (item) => {
-        const result = await cloudinary.uploader.upload(item.path, {
-          resource_type: "image",
-        });
-        return result.secure_url;
-      })
-    );
+    let imagesURL = [];
+    if (images.length > 0) {
+      imagesURL = await Promise.all(
+        images.map(async (item) => {
+          const result = await cloudinary.uploader.upload(item.path, {
+            resource_type: "image",
+          });
+          return result.secure_url;
+        })
+      );
+    }
 
     //Prepare the product data
     const productData = {
@@ -125,18 +128,16 @@ const singleProduct = async (req, res) => {
 // List all products
 const listProduct = async (req, res) => {
   try {
-    const products = await productModel.find();
-
+    const products = await productModel.find().populate("category", "name");
     res.status(200).json({
       success: true,
-      message: "All products retrieved successfully",
+      message: "Products retrieved successfully",
       products,
     });
   } catch (error) {
-    console.error("Error fetching products: ", error);
     res.status(500).json({
       success: false,
-      message: "Failed to fetch products",
+      message: "Failed to load products",
       error: error.message,
     });
   }
@@ -157,7 +158,7 @@ const updateProduct = async (req, res) => {
       height,
     } = req.body;
 
-    // Handle image update
+    // Ensure req.files exists and handle the images
     const image1 = req.files.image1 && req.files.image1[0];
     const image2 = req.files.image2 && req.files.image2[0];
     const image3 = req.files.image3 && req.files.image3[0];
