@@ -10,6 +10,7 @@ import List from "./pages/List";
 import Orders from "./pages/Orders";
 import AddCategory from "./pages/AddCategory";
 import AddWood from "./pages/AddWood";
+import Product from "./pages/Product";
 
 //export lineups
 export const backendUrl = import.meta.env.VITE_BACKEND_URL;
@@ -31,6 +32,7 @@ const App = () => {
             <Route path="/addWood" element={<AddWood />} />
             <Route path="/list" element={<List />} />
             <Route path="/orders" element={<Orders />} />
+            <Route path="/product/:id" element={<Product />} />
           </Routes>
         </div>
       </div>

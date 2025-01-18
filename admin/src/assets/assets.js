@@ -4,6 +4,8 @@ import order_icon from "./order_icon.png";
 import upload_area from "./upload_area.png";
 import list_icon from "./list_icon.png";
 import dashboard from "./dashboard.png";
+import star_rated from "./star_icon.png";
+import star_unrated from "./star_dull_icon.png";
 
 import rando1 from "./1rando.jpg";
 import rando2 from "./2rando.jpg";
@@ -23,6 +25,8 @@ export const assets = {
   upload_area,
   list_icon,
   dashboard,
+  star_rated,
+  star_unrated,
 };
 
 export const products = [
