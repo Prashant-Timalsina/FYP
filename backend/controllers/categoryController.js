@@ -7,6 +7,14 @@ export const createCategory = async (req, res) => {
   try {
     const { name, description } = req.body;
 
+    const dupCategory = await Category.findOne({ name });
+    if (dupCategory) {
+      return res.status(400).json({
+        success: false,
+        message: "Category already exists",
+      });
+    }
+
     const image = req.files.image && req.files.image[0];
 
     let imageURL = null;

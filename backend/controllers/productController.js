@@ -186,13 +186,23 @@ const updateProduct = async (req, res) => {
       name,
       description,
       category,
-      price: Number(price),
       woodName,
       image: imagesURL.length > 0 ? imagesURL : undefined,
       length,
       breadth,
       height,
     };
+
+    if (price !== undefined) {
+      const numericPrice = Number(price);
+      if (isNaN(numericPrice)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid price value",
+        });
+      }
+      updatedProductData.price = numericPrice;
+    }
 
     const updatedProduct = await productModel.findByIdAndUpdate(
       id,

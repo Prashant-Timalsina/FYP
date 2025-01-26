@@ -6,6 +6,7 @@ import list_icon from "./list_icon.png";
 import dashboard from "./dashboard.png";
 import star_rated from "./star_icon.png";
 import star_unrated from "./star_dull_icon.png";
+import close from "./close.png";
 
 import rando1 from "./1rando.jpg";
 import rando2 from "./2rando.jpg";
@@ -27,6 +28,7 @@ export const assets = {
   dashboard,
   star_rated,
   star_unrated,
+  close,
 };
 
 export const products = [

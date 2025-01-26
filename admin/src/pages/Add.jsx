@@ -19,6 +19,7 @@ const AddProduct = ({ token }) => {
   const [breadth, setBreadth] = useState("");
   const [height, setHeight] = useState("");
   const [categories, setCategories] = useState([]);
+  const [woods, setWoods] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -38,6 +39,26 @@ const AddProduct = ({ token }) => {
 
     fetchCategories();
   }, []);
+
+  useEffect(() => {
+    const fetchWoods = async () => {
+      try {
+        const response = await axios.get(`${backendUrl}/api/wood/all`);
+        if (response.data.success) {
+          setWoods(response.data.woods);
+        }
+        else {
+          toast.error(response.data.message);
+        }
+        
+      } catch (error) {
+        console.error("Error fetching woods:", error);
+        toast.error("Error fetching woods");
+      }
+    };
+
+    fetchWoods();
+    },[]);
 
   const handleImageChange = (e, setImage) => {
     setImage(e.target.files[0]);
@@ -227,21 +248,29 @@ const AddProduct = ({ token }) => {
         <div className="flex flex-col w-full">
           <p className="mb-2">Wood Name</p>
           <div className="flex gap-2 items-center">
-            <input
-              onChange={(e) => setWoodName(e.target.value)}
+            <select onChange={(e) => setWoodName(e.target.value)}
               value={woodName}
-              className="w-[40%] max-w-[250px] px-3 py-2 border rounded-md"
-              type="text"
-              placeholder="Enter wood name"
+              className=" w-[40%] max-w-[250px] px-3 py-2 border rounded-md"
               required
-            />
+            >
+              <option value="" disabled>
+                Select wood
+              </option>
+              {woods.map((wood) => (
+                <option key={wood._id} value={wood._id}>
+                  {wood.name}
+                </option>
+              ))}
+              
+            </select>
             <button
               type="button"
               onClick={() => navigate("/addWood")}
               className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
             >
-              Add Wood Name
+              Add Wood
             </button>
+
           </div>
         </div>
       </div>
@@ -285,7 +314,8 @@ const AddProduct = ({ token }) => {
         </div>
       </div>
 
-      <div className="w-full flex justify-center">
+
+      <div className="w-full mt-7">
         <button
           type="submit"
           className="w-36 py-3 mt-4 bg-black text-white rounded-md hover:bg-blue-600 transition-colors"
