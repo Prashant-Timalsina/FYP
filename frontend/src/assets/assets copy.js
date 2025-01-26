@@ -25,8 +25,6 @@ export const assets = {
   search,
   menu,
   back,
-  star_rated,
-  star_unrated,
 };
 
 export const products = [
