@@ -8,6 +8,7 @@ const productSchema = new mongoose.Schema(
     },
     description: {
       type: String,
+      default: "",
     },
     price: {
       type: Number,
@@ -25,14 +26,17 @@ const productSchema = new mongoose.Schema(
     length: {
       type: Number,
       default: null, // Default to null if not provided
+      min: [0, "Length cannot be less than 0"],
     },
     breadth: {
       type: Number,
       default: null, // Default to null if not provided
+      min: [0, "Breadth cannot be less than 0"],
     },
     height: {
       type: Number,
       default: null, // Default to null if not provided
+      min: [0, "Height cannot be less than 0"],
     },
   },
   { timestamps: true }

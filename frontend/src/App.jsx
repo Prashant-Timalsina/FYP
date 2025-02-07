@@ -14,25 +14,49 @@ import Product from "./pages/Product";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Searchbar from "./components/Searchbar";
-
+import Error from "./components/Error";
+import { Loader } from "lucide-react";
+import { useState, useEffect } from "react";
+import ResetPassword from "./pages/ResetPassword";
 const App = () => {
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <div className="px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]">
       <ToastContainer />
-      <Navbar />
-      <Searchbar />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/collection" element={<Collection />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/contact" element={<Contact />} />
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/place-order" element={<PlaceOrder />} />
-        <Route path="/orders" element={<Orders />} />
-        <Route path="/product/:id" element={<Product />} />
-      </Routes>
-      <Footer />
+
+      {loading ? (
+        <div className="flex justify-center items-center h-screen">
+          <Loader className="animate-spin w-16 h-16 text-primary" />
+        </div>
+      ) : (
+        <>
+          <Navbar />
+          <Searchbar />
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/collection" element={<Collection />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/cart" element={<Cart />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/place-order" element={<PlaceOrder />} />
+            <Route path="/orders" element={<Orders />} />
+            <Route path="/product/:id" element={<Product />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
+            <Route path="/*" element={<Error />} />
+          </Routes>
+          <Footer />
+        </>
+      )}
     </div>
   );
 };

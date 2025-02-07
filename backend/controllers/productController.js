@@ -15,16 +15,23 @@ const addProduct = async (req, res) => {
     } = req.body;
 
     // Ensure req.files exists and handle the images
-    const image1 = req.files.image1 && req.files.image1[0];
-    const image2 = req.files.image2 && req.files.image2[0];
-    const image3 = req.files.image3 && req.files.image3[0];
-    const image4 = req.files.image4 && req.files.image4[0];
+    const image1 = req.files?.image1?.[0]; // Check if req.files exists and get the first image
+    const image2 = req.files?.image2?.[0];
+    const image3 = req.files?.image3?.[0];
+    const image4 = req.files?.image4?.[0];
 
     // Create an array of images and filter out any undefined entries
-    const images = [image1, image2, image3, image4].filter(
-      (item) => item !== undefined
-    );
+    const images = [image1, image2, , image3, image4].filter(Boolean);
 
+    // Validate at least one image is provided
+    if (images.length < 1) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide at least one image",
+      });
+    }
+
+    // Upload the images to Cloudinary
     let imagesURL = [];
     if (images.length > 0) {
       imagesURL = await Promise.all(
@@ -50,6 +57,14 @@ const addProduct = async (req, res) => {
       height,
       date: Date.now(),
     };
+
+    //Validate price to be not less than 0
+    if (productData.price < 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Price cannot be less than 0",
+      });
+    }
 
     console.log(productData);
 

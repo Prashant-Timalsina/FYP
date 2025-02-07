@@ -1,20 +1,24 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { backendUrl } from '../App'; // Adjust based on your project structure
-import { assets } from '../assets/assets'; // If you have static assets like icons
+import React, { useEffect, useState, useContext } from "react";
+import { useParams } from "react-router-dom";
+import axios from "axios";
+// import { backendUrl } from "../App";
+import { assets } from "../assets/assets";
+import { AdminContext } from "../context/AdminContext";
 
 const Product = () => {
+  const { backendUrl, navigate } = useContext(AdminContext);
   const { id } = useParams();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [productData, setProductData] = useState(null);
-  const [category, setCategory] = useState(''); // State for category name
-  const [image, setImage] = useState('');
+  const [category, setCategory] = useState(""); // State for category name
+  const [image, setImage] = useState("");
 
   // Fetch product data from the backend
   const fetchProductData = async () => {
     try {
-      const response = await axios.get(`${backendUrl}/api/product/single/${id}`);
+      const response = await axios.get(
+        `${backendUrl}/api/product/single/${id}`
+      );
       if (response.data.success) {
         const product = response.data.product;
         setProductData(product);
@@ -25,24 +29,26 @@ const Product = () => {
           fetchCategory(product.category);
         }
       } else {
-        console.error('Error fetching product data:', response.data.message);
+        console.error("Error fetching product data:", response.data.message);
       }
     } catch (error) {
-      console.error('Error fetching product data:', error);
+      console.error("Error fetching product data:", error);
     }
   };
 
   // Fetch category data based on category ID
   const fetchCategory = async (categoryId) => {
     try {
-      const response = await axios.get(`${backendUrl}/api/category/single/${categoryId}`);
+      const response = await axios.get(
+        `${backendUrl}/api/category/single/${categoryId}`
+      );
       if (response.data.success) {
         setCategory(response.data.category.name); // Set category name
       } else {
-        console.error('Error fetching category:', response.data.message);
+        console.error("Error fetching category:", response.data.message);
       }
     } catch (error) {
-      console.error('Error fetching category:', error);
+      console.error("Error fetching category:", error);
     }
   };
 
@@ -61,7 +67,7 @@ const Product = () => {
       <div className="flex gap-12 sm:gap-12 flex-col sm:flex-row">
         {/* ----------------- Product Images ----------------- */}
         <div className="flex-1 flex flex-col-reverse gap-3 sm:flex-row">
-          <div className="flex sm:flex-col overflow-x-auto overflow-y-scroll justify-between sm:justify-normal sm:w-[18.7%] w-full">
+          <div className="flex sm:flex-col overflow-x-auto overflow-y-auto justify-between sm:justify-normal sm:w-[18.7%] w-full">
             {productData.image.map((item, index) => (
               <img
                 key={index}
@@ -92,11 +98,18 @@ const Product = () => {
             ))}
             <p className="pl-2">(122)</p>
           </div>
-          <p className="mt-5 text-sm text-gray-500">Category: {category || 'Loading...'}</p> {/* Show category name */}
+          <p className="mt-5 text-sm text-gray-500">
+            Category: {category || "Loading..."}
+          </p>{" "}
+          {/* Show category name */}
           <p className="mt-5 text-3xl font-medium">${productData.price}</p>
-          <p className="mt-5 text-gray-500 md:w-4/5">{productData.description}</p>
-
-          <button onClick={() => handleUpdate(productData._id)} className="bg-black text-white px-8 py-3 text-sm active:bg-gray-700">
+          <p className="mt-5 text-gray-500 md:w-4/5">
+            {productData.description}
+          </p>
+          <button
+            onClick={() => handleUpdate(productData._id)}
+            className="bg-black text-white px-8 py-3 text-sm active:bg-gray-700"
+          >
             UPDATE
           </button>
           <hr className="mt-8 sm:w-4/5" />

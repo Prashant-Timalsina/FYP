@@ -2,62 +2,65 @@ import Wood from "../models/woodModel.js"; // Assuming you have a Wood model
 import { v2 as cloudinary } from "cloudinary";
 
 export const createWood = async (req, res) => {
-    try {
-      const { name, description, advantages } = req.body;
-  
-      // Check if the wood name already exists
-      const existingWood = await Wood.findOne({ name });
-      if (existingWood) {
-        return res.status(400).json({
-          success: false,
-          message: "Wood name must be unique. This name already exists.",
-        });
-      }
-  
-      // Initialize images array
-      const images = [];
-      if (req.files) {
-        for (let i = 1; i <= 3; i++) {
-          const image = req.files[`image${i}`] && req.files[`image${i}`][0];
-          if (image) {
-            const result = await cloudinary.uploader.upload(image.path, {
-              resource_type: "image",
-            });
-            images.push(result.secure_url);
-          }
-        }
-      }
-  
-      // Check if advantages is an array (in case advantages[] is sent from Postman)
-      const parsedAdvantages = Array.isArray(advantages) ? advantages : (advantages ? advantages.split(",") : []);
-  
-      // Prepare the wood data
-      const woodData = {
-        name,
-        description,
-        images,
-        advantages: parsedAdvantages,
-        date: Date.now(),
-      };
-  
-      // Create a new wood instance and save it
-      const wood = new Wood(woodData);
-      const savedWood = await wood.save();
-  
-      res.status(201).json({
-        success: true,
-        message: "Wood type created successfully",
-        wood: savedWood,
-      });
-    } catch (error) {
-      res.status(500).json({
+  try {
+    const { name, description, advantages } = req.body;
+
+    // Check if the wood name already exists
+    const existingWood = await Wood.findOne({ name });
+    if (existingWood) {
+      return res.status(400).json({
         success: false,
-        message: "Failed to create wood type",
-        error: error.message,
+        message: "Wood name must be unique. This name already exists.",
       });
     }
-  };
-  
+
+    // Initialize images array
+    const images = [];
+    if (req.files) {
+      for (let i = 1; i <= 3; i++) {
+        const image = req.files[`image${i}`] && req.files[`image${i}`][0];
+        if (image) {
+          const result = await cloudinary.uploader.upload(image.path, {
+            resource_type: "image",
+          });
+          images.push(result.secure_url);
+        }
+      }
+    }
+
+    // Check if advantages is an array (in case advantages[] is sent from Postman)
+    const parsedAdvantages = Array.isArray(advantages)
+      ? advantages
+      : advantages
+      ? advantages.split(",")
+      : [];
+
+    // Prepare the wood data
+    const woodData = {
+      name,
+      description,
+      images,
+      advantages: parsedAdvantages,
+      date: Date.now(),
+    };
+
+    // Create a new wood instance and save it
+    const wood = new Wood(woodData);
+    const savedWood = await wood.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Wood type created successfully",
+      wood: savedWood,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to create wood type",
+      error: error.message,
+    });
+  }
+};
 
 // Get all wood types
 export const getAllWoods = async (req, res) => {

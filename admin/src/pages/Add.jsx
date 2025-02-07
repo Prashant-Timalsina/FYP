@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import { assets } from "../assets/assets";
 import axios from "axios";
-import { backendUrl } from "../App";
 import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import { AdminContext } from "../context/AdminContext";
 
-const AddProduct = ({ token }) => {
+const AddProduct = () => {
+  const { backendUrl, navigate, token } = useContext(AdminContext);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
@@ -20,11 +20,12 @@ const AddProduct = ({ token }) => {
   const [height, setHeight] = useState("");
   const [categories, setCategories] = useState([]);
   const [woods, setWoods] = useState([]);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
+        console.log(token);
+
         const response = await axios.get(`${backendUrl}/api/category/all`);
         if (response.data.success) {
           setCategories(response.data.categories);
@@ -46,11 +47,9 @@ const AddProduct = ({ token }) => {
         const response = await axios.get(`${backendUrl}/api/wood/all`);
         if (response.data.success) {
           setWoods(response.data.woods);
-        }
-        else {
+        } else {
           toast.error(response.data.message);
         }
-        
       } catch (error) {
         console.error("Error fetching woods:", error);
         toast.error("Error fetching woods");
@@ -58,7 +57,7 @@ const AddProduct = ({ token }) => {
     };
 
     fetchWoods();
-    },[]);
+  }, []);
 
   const handleImageChange = (e, setImage) => {
     setImage(e.target.files[0]);
@@ -85,8 +84,8 @@ const AddProduct = ({ token }) => {
     try {
       const response = await axios.post(
         `${backendUrl}/api/product/add`,
-        formData
-        // { headers: { Authorization: `Bearer ${token}` } }
+        formData,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (response.data.success) {
@@ -248,7 +247,8 @@ const AddProduct = ({ token }) => {
         <div className="flex flex-col w-full">
           <p className="mb-2">Wood Name</p>
           <div className="flex gap-2 items-center">
-            <select onChange={(e) => setWoodName(e.target.value)}
+            <select
+              onChange={(e) => setWoodName(e.target.value)}
               value={woodName}
               className=" w-[40%] max-w-[250px] px-3 py-2 border rounded-md"
               required
@@ -261,7 +261,6 @@ const AddProduct = ({ token }) => {
                   {wood.name}
                 </option>
               ))}
-              
             </select>
             <button
               type="button"
@@ -270,7 +269,6 @@ const AddProduct = ({ token }) => {
             >
               Add Wood
             </button>
-
           </div>
         </div>
       </div>
@@ -313,7 +311,6 @@ const AddProduct = ({ token }) => {
           />
         </div>
       </div>
-
 
       <div className="w-full mt-7">
         <button

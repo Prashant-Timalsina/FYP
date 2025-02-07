@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from "react";
 import { ShopContext } from "../context/ShopContext";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { assets } from "../assets/assets";
 
 const Login = () => {
   const [currentState, setCurrentState] = useState("Login");
@@ -9,6 +10,7 @@ const Login = () => {
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const onSubmitHandler = async (event) => {
     event.preventDefault(); // Prevent page reload
@@ -63,6 +65,39 @@ const Login = () => {
     }
   };
 
+  // 🔹 Forgot Password Handler
+  const forgotPasswordHandler = async () => {
+    const userEmail = prompt("Enter your email for password reset:");
+    if (!userEmail) return;
+
+    // Validate email format
+    const isValidEmail = /\S+@\S+\.\S+/;
+    if (!isValidEmail.test(userEmail)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
+    try {
+      const response = await axios.post(
+        `${backendUrl}/api/user/forgot-password`,
+        {
+          email: userEmail,
+        }
+      );
+
+      if (response.data.success) {
+        toast.success("Password reset link sent to your email.");
+      } else {
+        toast.error(response.data.message || "Failed to send reset email.");
+      }
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || "Something went wrong. Try again."
+      );
+      console.error("Forgot Password Error:", error);
+    }
+  };
+
   useEffect(() => {
     if (token) navigate("/"); // Redirect on successful login
   }, [token, navigate]);
@@ -94,16 +129,36 @@ const Login = () => {
         placeholder="E-mail"
         required
       />
-      <input
-        type="password"
-        className="w-full px-3 py-2 border border-gray-800"
-        onChange={(e) => setPassword(e.target.value)}
-        value={password}
-        placeholder="Password"
-        required
-      />
+      <div className="relative w-full">
+        <input
+          type={showPassword ? "text" : "password"}
+          className="w-full px-3 py-2 border border-gray-800 pr-10" // Add padding-right to make space for the image
+          onChange={(e) => setPassword(e.target.value)}
+          value={password}
+          placeholder="Password"
+          required
+        />
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute right-2 top-1/2 transform -translate-y-1/2 text-xl" // Absolute position for the icon inside the field
+        >
+          {showPassword ? (
+            <img className="h-4 w-4" src={assets.show} alt="Show password" />
+          ) : (
+            <img className="h-4 w-4" src={assets.hide} alt="Hide password" />
+          )}
+        </button>
+      </div>
+
       <div className="w-full flex justify-between text-sm mt-[-8px]">
-        <p>Forgot Password?</p>
+        {currentState === "Login" ? (
+          <p onClick={forgotPasswordHandler} className="cursor-pointer">
+            Forgot Password?
+          </p>
+        ) : (
+          "-->"
+        )}
         {currentState === "Login" ? (
           <p
             onClick={() => setCurrentState("SignUp")}

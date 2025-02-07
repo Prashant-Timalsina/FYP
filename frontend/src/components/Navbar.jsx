@@ -4,7 +4,8 @@ import { assets } from "../assets/assets";
 import { ShopContext } from "../context/ShopContext";
 
 const Navbar = () => {
-  const { navigate, setShowSearch } = useContext(ShopContext);
+  const { navigate, showSearch, setShowSearch, token, setToken } =
+    useContext(ShopContext);
   const [visible, setVisible] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
 
@@ -40,44 +41,62 @@ const Navbar = () => {
       </ul>
 
       <div className="flex items-center gap-6">
-        <img
+        {/* <img
           src={assets.search}
           className="w-6 cursor-pointer"
           alt="Search icon"
           onClick={() => setShowSearch(true)}
+        /> */}
+        <img
+          src={assets.search}
+          className="w-6 cursor-pointer"
+          alt="Search icon"
+          onClick={() => setShowSearch(!showSearch)}
         />
-        <div className="relative">
-          <img
-            src={assets.profile}
-            className="w-6 cursor-pointer"
-            alt="Profile icon"
-            onClick={() => setVisible(!visible)}
-          />
 
-          {visible && (
-            <div className="absolute right-0 pt-3">
-              <div className="flex flex-col px-5 gap-2 w-32 bg-slate-200 rounded">
-                <p className="cursor-pointer hover:underline ">My Profile</p>
-                <p
-                  className="cursor-pointer hover:underline "
-                  onClick={() => {
-                    navigate("/orders");
-                    setVisible(false);
-                  }}
-                >
-                  Orders
-                </p>
-                <p
-                  onClick={() => {
-                    logOut();
-                    setVisible(false);
-                  }}
-                  className="cursor-pointer hover:underline "
-                >
-                  Log Out
-                </p>
-              </div>
-            </div>
+        <div className="relative">
+          {token ? (
+            <>
+              <img
+                src={assets.profile}
+                className="w-6 cursor-pointer"
+                alt="Profile icon"
+                onClick={() => setVisible(!visible)}
+              />
+
+              {visible && (
+                <div className="absolute right-0 pt-3">
+                  <div className="flex flex-col px-5 gap-2 w-32 bg-slate-200 rounded">
+                    <p className="cursor-pointer hover:underline">My Profile</p>
+                    <p
+                      className="cursor-pointer hover:underline"
+                      onClick={() => {
+                        navigate("/orders");
+                        setVisible(false);
+                      }}
+                    >
+                      Orders
+                    </p>
+                    <p
+                      onClick={() => {
+                        logOut();
+                        setVisible(false);
+                      }}
+                      className="cursor-pointer hover:underline"
+                    >
+                      Log Out
+                    </p>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <img
+              src={assets.profile}
+              className="w-6 cursor-pointer"
+              alt="Profile icon"
+              onClick={() => navigate("/login")}
+            />
           )}
         </div>
 

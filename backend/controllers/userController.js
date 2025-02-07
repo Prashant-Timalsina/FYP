@@ -2,10 +2,14 @@ import bcrypt from "bcrypt"; // For hashing passwords
 import userModel from "../models/userModel.js"; // Import the user model
 import jwt from "jsonwebtoken";
 import validator from "validator";
+import sendEmail from "../utils/emailService.js"; // Adjust path if needed
+import crypto from "crypto";
 
 const createToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET);
+  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "1h" });
 };
+
+const passwordValidation = /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]+$/;
 
 // CREATE: Create a new user
 export const createUser = async (req, res) => {
@@ -37,11 +41,20 @@ export const createUser = async (req, res) => {
         .json({ success: false, message: "Enter a valid email" });
     }
 
-    // Check password strength
+    // Validate Passord length should be more then 6 characters
     if (password.length < 6) {
       return res.status(400).json({
         success: false,
-        message: "Password must be at least 6 characters long",
+        message: "Password length must be greater then 6",
+      });
+    }
+
+    //Validate with regex
+    if (!password.match(passwordValidation)) {
+      return res.status(400).json({
+        success: false,
+        message: `Password must contain at least one uppercase letter and one number.
+          Pasword must be at least 6 characters long`,
       });
     }
 
@@ -99,7 +112,11 @@ export const loginUser = async (req, res) => {
   const isMatch = await bcrypt.compare(password, user.password);
   if (isMatch) {
     const token = createToken(user._id);
-    return res.status(200).json({ success: true, token });
+    return res.status(200).json({
+      success: true,
+      message: "Logged in",
+      token,
+    });
   } else {
     return res.status(400).json({
       success: false,
@@ -108,19 +125,87 @@ export const loginUser = async (req, res) => {
   }
 };
 
+export const adminLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and password are required.",
+      });
+    }
+
+    // 🔹 Superadmin Login (Fixed Email & Password)
+    if (
+      email === process.env.ADMIN_EMAIL &&
+      password === process.env.ADMIN_PASSWORD
+    ) {
+      const token = jwt.sign(
+        { email, role: "superadmin" },
+        process.env.JWT_SECRET,
+        { expiresIn: "1h" }
+      );
+
+      return res.status(200).json({
+        success: true,
+        token,
+        role: "superadmin",
+      });
+    }
+
+    // 🔹 Check if the email exists in the database
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Admin not found",
+      });
+    }
+
+    // 🔹 Ensure the user has admin privileges
+    if (user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Admin access is not allowed for this account",
+      });
+    }
+
+    // 🔹 Validate password (check against hashed password)
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid credentials",
+      });
+    }
+
+    // 🔹 Generate JWT Token for Admin
+    const token = jwt.sign(
+      { email, role: "admin", userId: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    return res.status(200).json({
+      success: true,
+      token,
+      role: "admin",
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 // UPDATE: Update user details
 export const updateUser = async (req, res) => {
   try {
-    const { userId } = req.body;
-    const { name, email, password } = req.body;
-
-    // Validate input data
-    if (!name && !email && !password) {
-      return res.status(400).json({
-        success: false,
-        message: "At least one field is required to update",
-      });
-    }
+    const { userId, name, email, password } = req.body;
+    const avatar = req.files?.image?.[0]; // Check if an image is uploaded
 
     // Find the user by ID
     const user = await userModel.findById(userId);
@@ -130,6 +215,14 @@ export const updateUser = async (req, res) => {
         .json({ success: false, message: "User not found" });
     }
 
+    let imageURL = user.avatar; // Default to current avatar
+    if (avatar) {
+      const result = await cloudinary.uploader.upload(avatar.path, {
+        resource_type: "image",
+      });
+      imageURL = result.secure_url;
+    }
+
     // Update user details
     if (name) user.name = name;
     if (email) user.email = email;
@@ -137,6 +230,7 @@ export const updateUser = async (req, res) => {
       const salt = await bcrypt.genSalt(10);
       user.password = await bcrypt.hash(password, salt);
     }
+    if (avatar) user.avatar = imageURL; // Update avatar if provided
 
     // Save updated user to the database
     const updatedUser = await user.save();
@@ -180,5 +274,72 @@ export const deleteUser = async (req, res) => {
   } catch (error) {
     console.error("Error deleting user:", error);
     return res.status(500).json({ message: "Server error" });
+  }
+};
+
+// 1️⃣ Request Password Reset (Sends Email)
+export const requestPasswordReset = async (req, res) => {
+  try {
+    const { email } = req.body;
+    const user = await userModel.findOne({ email });
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Generate reset token & expiration
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    user.resetToken = resetToken;
+    user.resetTokenExpiry = Date.now() + 15 * 60 * 1000; // 15 min expiry
+
+    console.log("Generated reset token:", resetToken);
+    console.log("Before saving user:", user);
+
+    await user.save();
+
+    // Send reset email
+    const resetLink = `http://localhost:5173/reset-password/${resetToken}`;
+    await sendEmail(user.email, "Password Reset", `Click here: ${resetLink}`);
+
+    res.json({ success: true, message: "Reset email sent!" });
+  } catch (error) {
+    console.error("Error in requestPasswordReset:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    // Check if password meets the criteria
+    if (!passwordValidation.test(newPassword)) {
+      return res.status(400).json({
+        message:
+          "Password must contain at least one uppercase letter and one number",
+      });
+    }
+
+    console.log("Received token:", token);
+    console.log("Checking database for user with this token...");
+
+    const user = await userModel.findOne({
+      resetToken: token,
+      resetTokenExpiry: { $gt: Date.now() },
+    });
+    console.log("Found user:", user);
+
+    if (!user)
+      return res.status(400).json({ message: "Invalid or expired token" });
+
+    // Hash new password and update
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+
+    // Clear the reset token
+    user.resetToken = undefined;
+    user.resetTokenExpiry = undefined;
+    await user.save();
+
+    res.json({ success: true, message: "Password reset successful!" });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
   }
 };
