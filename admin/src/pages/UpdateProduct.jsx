@@ -1,13 +1,15 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useEffect, useState, useContext } from "react";
+import { useParams } from "react-router-dom";
 import axios from "axios";
-import { backendUrl } from "../App";
+// import { backendUrl } from "../App";
 import { toast } from "react-toastify";
 import { assets } from "../assets/assets"; // For static assets like image placeholders
+import { AdminContext } from "../context/AdminContext";
 
 const UpdateProduct = ({ token }) => {
+  const { backendUrl, navigate } = useContext(AdminContext);
   const { id } = useParams();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [productData, setProductData] = useState(null);
 
   const [name, setName] = useState("");
@@ -45,13 +47,13 @@ const UpdateProduct = ({ token }) => {
     fetchCategories();
   }, []);
 
-
-
   // Fetch the product details
   useEffect(() => {
     const fetchProductDetails = async () => {
       try {
-        const response = await axios.get(`${backendUrl}/api/product/single/${id}`);
+        const response = await axios.get(
+          `${backendUrl}/api/product/single/${id}`
+        );
         if (response.data.success) {
           const product = response.data.product;
           setProductData(product);
@@ -105,9 +107,13 @@ const UpdateProduct = ({ token }) => {
     if (image4 instanceof File) formData.append("image4", image4);
 
     try {
-      const response = await axios.put(`${backendUrl}/api/product/update/${id}`, formData, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.put(
+        `${backendUrl}/api/product/update/${id}`,
+        formData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
       if (response.data.success) {
         toast.success(response.data.message);
@@ -116,7 +122,10 @@ const UpdateProduct = ({ token }) => {
         toast.error(response.data.message);
       }
     } catch (error) {
-      console.error("Error updating product:", error.response?.data || error.message);
+      console.error(
+        "Error updating product:",
+        error.response?.data || error.message
+      );
       toast.error(error.response?.data?.message || error.message);
     }
   };
@@ -134,11 +143,20 @@ const UpdateProduct = ({ token }) => {
             <label key={index} htmlFor={`image${index + 1}`}>
               <img
                 className="w-20"
-                src={image instanceof File ? URL.createObjectURL(image) : image || assets.upload_area}
+                src={
+                  image instanceof File
+                    ? URL.createObjectURL(image)
+                    : image || assets.upload_area
+                }
                 alt="Upload"
               />
               <input
-                onChange={(e) => handleImageChange(e, [setImage1, setImage2, setImage3, setImage4][index])}
+                onChange={(e) =>
+                  handleImageChange(
+                    e,
+                    [setImage1, setImage2, setImage3, setImage4][index]
+                  )
+                }
                 type="file"
                 id={`image${index + 1}`}
                 hidden

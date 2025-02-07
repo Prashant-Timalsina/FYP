@@ -1,16 +1,18 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
-import { backendUrl } from "../App";
-import { useNavigate } from "react-router-dom";
+// import { backendUrl } from "../App";
+// import { useNavigate } from "react-router-dom";
 import { assets } from "../assets/assets";
+import { AdminContext } from "../context/AdminContext";
 
 const List = () => {
+  const { backendUrl, navigate, token } = useContext(AdminContext);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [woodNames, setWoodNames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hoveredWood, setHoveredWood] = useState(null); // New state for hovered wood
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -43,18 +45,21 @@ const List = () => {
     navigate(`/updateProduct/${id}`);
   };
 
+  const handleUpdateCategory = (id) => {
+    navigate(`/updateCategory/${id}`);
+  };
+
   const handleDeleteProduct = async (id) => {
     if (window.confirm("Are you sure you want to delete this item?")) {
       try {
         const response = await axios.delete(
-          `${backendUrl}/api/product/remove/${id}`
+          `${backendUrl}/api/product/remove/${id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         if (response.data.success) {
           setProducts((prevProducts) =>
             prevProducts.filter((product) => product._id !== id)
           );
-        } else {
-          console.error(response.data.message);
         }
       } catch (error) {
         console.error("Error deleting product:", error);
@@ -62,22 +67,17 @@ const List = () => {
     }
   };
 
-  const handleUpdateCategory = (id) => {
-    navigate(`/updateCategory/${id}`);
-  };
-
   const handleDeleteCategory = async (id) => {
     if (window.confirm("Are you sure you want to delete this category?")) {
       try {
         const response = await axios.delete(
-          `${backendUrl}/api/category/remove/${id}`
+          `${backendUrl}/api/category/remove/${id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
         );
         if (response.data.success) {
           setCategories((prevCategories) =>
             prevCategories.filter((category) => category._id !== id)
           );
-        } else {
-          console.error(response.data.message);
         }
       } catch (error) {
         console.error("Error deleting category:", error);

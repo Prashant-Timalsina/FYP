@@ -1,52 +1,69 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useContext } from "react";
+// import { useNavigate } from "react-router-dom";
 import { assets } from "../assets/assets";
 import axios from "axios";
-import { backendUrl } from "../App";
 import { toast } from "react-toastify";
+import { AdminContext } from "../context/AdminContext";
 
 const AddWood = () => {
-  const [image, setImage] = useState(null);
+  const { backendUrl, navigate, token } = useContext(AdminContext);
+  const [image1, setImage1] = useState(null);
+  const [image2, setImage2] = useState(null);
+  const [image3, setImage3] = useState(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [characteristics, setCharacteristics] = useState([""]);
-  const navigate = useNavigate();
+  const [advantages, setAdvantages] = useState([""]);
 
-  const handleImageChange = (e) => {
+  // Handles file selection for each image input
+  const handleImageChange = (e, setImage) => {
     setImage(e.target.files[0]);
   };
 
-  const handleCharacteristicChange = (index, value) => {
-    const newCharacteristics = [...characteristics];
-    newCharacteristics[index] = value;
-    setCharacteristics(newCharacteristics);
+  // Handles changes to the advantages input
+  const handleAdvantageChange = (index, value) => {
+    const newAdvantages = [...advantages];
+    newAdvantages[index] = value;
+    setAdvantages(newAdvantages);
   };
 
-  const handleAddCharacteristic = () => {
-    setCharacteristics([...characteristics, ""]);
+  // Adds a new advantage input
+  const handleAddAdvantage = () => {
+    setAdvantages([...advantages, ""]);
   };
 
-  const handleRemoveCharacteristic = () => {
-    if (characteristics.length > 1) {
-      setCharacteristics(characteristics.slice(0, -1));
+  // Removes the last advantage input
+  const handleRemoveAdvantage = () => {
+    if (advantages.length > 1) {
+      setAdvantages(advantages.slice(0, -1));
     }
   };
 
+  // Saves the wood item
   const handleSave = async () => {
     const formData = new FormData();
     formData.append("name", name);
     formData.append("description", description);
-    formData.append("image", image);
-    formData.append("characteristics", JSON.stringify(characteristics));
+    formData.append("advantages", JSON.stringify(advantages)); // Send advantages as JSON array
+
+    // Append the images to the form data
+    if (image1) formData.append("image1", image1);
+    if (image2) formData.append("image2", image2);
+    if (image3) formData.append("image3", image3);
 
     try {
-      const response = await axios.post(`${backendUrl}/api/wood/add`, formData);
+      const response = await axios.post(
+        `${backendUrl}/api/wood/add`,
+        formData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       if (response.data.success) {
         toast.success(response.data.message);
         setName("");
-        setImage(null);
         setDescription("");
-        setCharacteristics([""]);
+        setAdvantages([""]);
+        setImage1(null);
+        setImage2(null);
+        setImage3(null); // Reset images after successful save
         navigate("/add");
       } else {
         toast.error(response.data.message);
@@ -66,22 +83,60 @@ const AddWood = () => {
         &larr; Back to Add Product
       </button>
       <h2 className="text-2xl font-bold mb-4">Add Wood Name</h2>
+
+      {/* Image upload section */}
       <div className="mb-4">
         <label className="block mb-2">Wood Image</label>
-        <label htmlFor="woodImage">
+        <label htmlFor="woodImage1">
           <img
             className="w-20"
-            src={!image ? assets.upload_area : URL.createObjectURL(image)}
+            src={!image1 ? assets.upload_area : URL.createObjectURL(image1)}
             alt="Upload"
           />
           <input
-            onChange={handleImageChange}
+            onChange={(e) => handleImageChange(e, setImage1)}
             type="file"
-            id="woodImage"
+            id="woodImage1"
             hidden
           />
         </label>
       </div>
+
+      <div className="mb-4">
+        <label className="block mb-2">Wood Image 2</label>
+        <label htmlFor="woodImage2">
+          <img
+            className="w-20"
+            src={!image2 ? assets.upload_area : URL.createObjectURL(image2)}
+            alt="Upload"
+          />
+          <input
+            onChange={(e) => handleImageChange(e, setImage2)}
+            type="file"
+            id="woodImage2"
+            hidden
+          />
+        </label>
+      </div>
+
+      <div className="mb-4">
+        <label className="block mb-2">Wood Image 3</label>
+        <label htmlFor="woodImage3">
+          <img
+            className="w-20"
+            src={!image3 ? assets.upload_area : URL.createObjectURL(image3)}
+            alt="Upload"
+          />
+          <input
+            onChange={(e) => handleImageChange(e, setImage3)}
+            type="file"
+            id="woodImage3"
+            hidden
+          />
+        </label>
+      </div>
+
+      {/* Wood name and description */}
       <div className="mb-4">
         <label className="block mb-2">Wood Name</label>
         <input
@@ -101,19 +156,19 @@ const AddWood = () => {
           placeholder="Enter wood description"
         />
       </div>
+
+      {/* Advantages */}
       <div className="mb-4">
         <label className="block mb-2">Characteristics</label>
         <div className="max-h-40 overflow-y-auto">
           <ol className="list-decimal pl-5">
-            {characteristics.map((characteristic, index) => (
+            {advantages.map((advantage, index) => (
               <li key={index} className="mb-2">
                 <input
-                  value={characteristic}
-                  onChange={(e) =>
-                    handleCharacteristicChange(index, e.target.value)
-                  }
+                  value={advantage}
+                  onChange={(e) => handleAdvantageChange(index, e.target.value)}
                   className="w-full px-3 py-2 border rounded-md"
-                  placeholder="Enter characteristic"
+                  placeholder="Enter advantage"
                 />
               </li>
             ))}
@@ -122,20 +177,22 @@ const AddWood = () => {
         <div className="flex gap-2">
           <button
             type="button"
-            onClick={handleAddCharacteristic}
+            onClick={handleAddAdvantage}
             className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
           >
             +
           </button>
           <button
             type="button"
-            onClick={handleRemoveCharacteristic}
+            onClick={handleRemoveAdvantage}
             className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
           >
             -
           </button>
         </div>
       </div>
+
+      {/* Save and Cancel buttons */}
       <div className="flex justify-end gap-2">
         <button
           onClick={() => navigate("/add")}

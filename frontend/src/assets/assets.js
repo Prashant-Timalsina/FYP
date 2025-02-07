@@ -6,6 +6,9 @@ import menu from "./menu.png";
 import back from "./back.png";
 import star_rated from "./star_icon.png";
 import star_unrated from "./star_dull_icon.png";
+import show from "./show.png";
+import hide from "./hide.png";
+import aboutus from "./aboutus.jpg";
 
 import rando1 from "./1rando.jpg";
 import rando2 from "./2rando.jpg";
@@ -27,6 +30,9 @@ export const assets = {
   back,
   star_rated,
   star_unrated,
+  show,
+  hide,
+  aboutus,
 };
 
 export const products = [

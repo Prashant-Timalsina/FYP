@@ -7,6 +7,7 @@ import productRouter from "./routes/productRoutes.js";
 import categoryRouter from "./routes/categoryRoutes.js";
 import userRouter from "./routes/userRoutes.js";
 import woodRouter from "./routes/woodRoutes.js";
+import sendEmail from "./middlewares/NodeMailer.js";
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -17,6 +18,9 @@ connectCloudinary();
 
 app.use(express.json());
 app.use(cors());
+
+//Routes
+app.post("/send-email", sendEmail);
 
 // API endpoints
 app.use("/api/product", productRouter);

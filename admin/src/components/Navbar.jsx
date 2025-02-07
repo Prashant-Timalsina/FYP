@@ -1,7 +1,16 @@
-import React from "react";
+import React, { useContext } from "react";
 import { assets } from "../assets/assets";
+import { AdminContext } from "../context/AdminContext";
 
 const Navbar = () => {
+  const { token, setToken, navigate } = useContext(AdminContext);
+
+  const handleLogout = () => {
+    setToken(null);
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
+
   return (
     <div className="flex justify-between items-center p-4 ">
       <img
@@ -9,12 +18,15 @@ const Navbar = () => {
         src={assets.logo}
         alt="Logo"
       />
-      <button
-        className="border px-4 py-2 sm:px-6 sm:py-2 md:px-8 md:py-3 rounded-full bg-slate-900 text-white text-sm sm:text-base md:text-lg hover:bg-slate-600 transition-colors"
-        onClick={() => console.log("logout")}
-      >
-        Logout
-      </button>
+      <div className="flex flex-row gap-2">
+        <button className="hover:underline">Frontend Page</button>
+        <button
+          className="border px-4 py-2 sm:px-6 sm:py-2 md:px-4 md:py-2 rounded-full bg-slate-900 text-white text-sm sm:text-base md:text-lg hover:bg-slate-600 transition-colors"
+          onClick={() => handleLogout()}
+        >
+          Logout
+        </button>
+      </div>
     </div>
   );
 };

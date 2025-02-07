@@ -1,15 +1,17 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useContext } from "react";
+// import { useNavigate } from "react-router-dom";
 import { assets } from "../assets/assets";
 import axios from "axios";
-import { backendUrl } from "../App";
+// import { backendUrl } from "../App";
 import { toast } from "react-toastify";
+import { AdminContext } from "../context/AdminContext";
 
 const AddCategory = () => {
+  const { backendUrl, navigate, token } = useContext(AdminContext);
   const [image, setImage] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
 
   const handleImageChange = (e) => {
     setImage(e.target.files[0]);
@@ -25,7 +27,8 @@ const AddCategory = () => {
     try {
       const response = await axios.post(
         `${backendUrl}/api/category/add`,
-        formData
+        formData,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       if (response.data.success) {
         toast.success(response.data.message);

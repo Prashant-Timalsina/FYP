@@ -1,13 +1,15 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import React, { useEffect, useState, useContext } from "react";
+import { useParams } from "react-router-dom";
 import axios from "axios";
-import { backendUrl } from "../App";
+// import { backendUrl } from "../App";
 import { toast } from "react-toastify";
 import { assets } from "../assets/assets"; // For static assets like image placeholders
+import { AdminContext } from "../context/AdminContext";
 
 const UpdateCategory = ({ token }) => {
+  const { backendUrl, navigate } = useContext(AdminContext);
   const { id } = useParams();
-  const navigate = useNavigate();
+  // const navigate = useNavigate();
   const [categoryData, setCategoryData] = useState(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
