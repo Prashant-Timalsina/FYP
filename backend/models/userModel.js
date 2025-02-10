@@ -10,8 +10,7 @@ const userSchema = new mongoose.Schema(
     },
     avatar: {
       type: String,
-      default:
-        "https://images.unsplash.com/photo-1597072689227-8882273e8f6a?q=80&w=1035&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      default: null,
     },
     email: {
       type: String,
@@ -30,7 +29,22 @@ const userSchema = new mongoose.Schema(
       enum: ["user", "admin"],
       default: "user",
     },
-    cartData: { type: Object, default: {} },
+    cartData: {
+      type: [
+        {
+          itemId: String,
+          length: Number,
+          breadth: Number,
+          height: Number,
+          quantity: Number,
+        },
+      ],
+      default: [], // ✅ Now cart is an array
+    },
+    favorites: {
+      type: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
+      default: [],
+    },
     // Add these fields for email verification
     isVerified: {
       type: Boolean,

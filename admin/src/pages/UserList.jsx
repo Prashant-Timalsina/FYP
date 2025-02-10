@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { AdminContext } from "../context/AdminContext";
 import { toast } from "react-toastify";
+import { assets } from "../assets/assets.js";
 
 const UserList = () => {
   const { backendUrl, token } = useContext(AdminContext);
@@ -39,7 +40,7 @@ const UserList = () => {
             className="border p-4 rounded-lg shadow-md flex items-center"
           >
             <img
-              src={user.image}
+              src={user.image || assets.defaultImage}
               alt={user.name}
               className="w-12 h-12 rounded-full mr-4"
             />

@@ -7,6 +7,7 @@ import productRouter from "./routes/productRoutes.js";
 import categoryRouter from "./routes/categoryRoutes.js";
 import userRouter from "./routes/userRoutes.js";
 import woodRouter from "./routes/woodRoutes.js";
+import cartRouter from "./routes/cartRoutes.js";
 import sendEmail from "./middlewares/NodeMailer.js";
 
 const app = express();
@@ -27,6 +28,7 @@ app.use("/api/product", productRouter);
 app.use("/api/category", categoryRouter);
 app.use("/api/user", userRouter);
 app.use("/api/wood", woodRouter);
+app.use("/api/cart", cartRouter);
 
 app.get("/", (req, res) => {
   res.send("API working");

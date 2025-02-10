@@ -11,6 +11,7 @@ import Login from "./pages/Login";
 import PlaceOrder from "./pages/PlaceOrder";
 import Orders from "./pages/Orders";
 import Product from "./pages/Product";
+import CustomOrder from "./pages/CustomOrder";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Searchbar from "./components/Searchbar";
@@ -18,6 +19,7 @@ import Error from "./components/Error";
 import { Loader } from "lucide-react";
 import { useState, useEffect } from "react";
 import ResetPassword from "./pages/ResetPassword";
+import Profile from "./pages/Profile";
 const App = () => {
   const [loading, setLoading] = useState(true);
 
@@ -51,6 +53,9 @@ const App = () => {
             <Route path="/place-order" element={<PlaceOrder />} />
             <Route path="/orders" element={<Orders />} />
             <Route path="/product/:id" element={<Product />} />
+            <Route path="/custom-order" element={<CustomOrder />} />
+            <Route path="/profile" element={<Profile />} />
+
             <Route path="/reset-password/:token" element={<ResetPassword />} />
             <Route path="/*" element={<Error />} />
           </Routes>

@@ -8,6 +8,7 @@ import {
   adminLogin,
   requestPasswordReset,
   resetPassword,
+  userData,
 } from "../controllers/userController.js"; // Import the user controller
 import authUser from "../middlewares/UserAuth.js";
 import adminAuth from "../middlewares/AdminAuth.js";
@@ -23,6 +24,9 @@ userRouter.post("/admin", adminLogin);
 
 // Route to get all users (requires authentication)
 userRouter.get("/list", adminAuth, getAllUsers);
+
+// Route to get a user by ID (requires authentication)
+userRouter.get("/single/me", authUser, userData);
 
 // Route to delete a user by ID (requires authentication)
 userRouter.delete("/remove/:id", deleteUser);
