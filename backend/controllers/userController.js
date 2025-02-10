@@ -16,6 +16,18 @@ export const createUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
+    // Ensure req.files exists and handle the image
+    const image = req.files?.image?.[0]; // Check if req.files exists and get the image
+
+    // Upload the image to Cloudinary
+    let imageURL = null;
+    if (image) {
+      const result = await cloudinary.uploader.upload(image.path, {
+        resource_type: "image",
+      });
+      imageURL = result.secure_url;
+    }
+
     // // Log the received input data
     // console.log("Received data:", { name, email, password });
 
@@ -66,6 +78,7 @@ export const createUser = async (req, res) => {
     const newUser = new userModel({
       name,
       email,
+      avatar: imageURL,
       password: hashedPassword,
     });
 
@@ -198,6 +211,29 @@ export const adminLogin = async (req, res) => {
       success: false,
       message: "Internal server error",
     });
+  }
+};
+
+export const userData = async (req, res) => {
+  try {
+    const { id } = req.user;
+
+    // Check if the authenticated user matches the ID in the request
+    if (req.user.id !== id) {
+      return res
+        .status(403)
+        .json({ message: "You can only access your own data" });
+    }
+
+    const user = await userModel.findById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.status(200).json({ user });
+  } catch (error) {
+    console.error("Error fetching user:", error);
+    return res.status(500).json({ message: "Server error" });
   }
 };
 

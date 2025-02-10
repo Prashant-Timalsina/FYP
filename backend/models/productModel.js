@@ -38,6 +38,10 @@ const productSchema = new mongoose.Schema(
       default: null, // Default to null if not provided
       min: [0, "Height cannot be less than 0"],
     },
+    isFavorite: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

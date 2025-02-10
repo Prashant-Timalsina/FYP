@@ -9,6 +9,7 @@ import star_unrated from "./star_dull_icon.png";
 import close from "./close.png";
 import show from "./show.png";
 import hide from "./hide.png";
+import defaultImage from "./default.png";
 
 import rando1 from "./1rando.jpg";
 import rando2 from "./2rando.jpg";
@@ -33,6 +34,7 @@ export const assets = {
   close,
   show,
   hide,
+  defaultImage,
 };
 
 export const products = [

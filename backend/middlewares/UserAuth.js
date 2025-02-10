@@ -15,7 +15,10 @@ const authUser = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.body.userId = decoded.id; // Attach userId to req.body
+    // req.body.userId = decoded.id; // Attach userId to req.body
+    req.user = { id: decoded.id }; // Attach user object to request
+    console.log("Authenticated User ID:", req.user.id); // Debugging log
+
     next();
   } catch (error) {
     console.log("JWT Verification Error:", error.message);

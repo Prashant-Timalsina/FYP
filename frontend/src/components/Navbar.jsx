@@ -4,7 +4,7 @@ import { assets } from "../assets/assets";
 import { ShopContext } from "../context/ShopContext";
 
 const Navbar = () => {
-  const { navigate, showSearch, setShowSearch, token, setToken } =
+  const { navigate, showSearch, setShowSearch, getCartCount, token, setToken } =
     useContext(ShopContext);
   const [visible, setVisible] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
@@ -65,9 +65,17 @@ const Navbar = () => {
               />
 
               {visible && (
-                <div className="absolute right-0 pt-3">
+                <div className="absolute right-0 pt-3 z-50">
                   <div className="flex flex-col px-5 gap-2 w-32 bg-slate-200 rounded">
-                    <p className="cursor-pointer hover:underline">My Profile</p>
+                    <p
+                      onClick={() => {
+                        navigate("/profile");
+                        setVisible(false);
+                      }}
+                      className="cursor-pointer hover:underline"
+                    >
+                      My Profile
+                    </p>
                     <p
                       className="cursor-pointer hover:underline"
                       onClick={() => {
@@ -107,7 +115,7 @@ const Navbar = () => {
             alt="Cart icon"
           />
           <p className="absolute right-[-5px] bottom-[-5px] w-4 text-center leading-4 bg-black text-white aspect-square rounded-full text-xs">
-            10
+            {/* {getCartCount()} */}
           </p>
         </Link>
 

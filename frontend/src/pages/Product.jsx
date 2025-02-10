@@ -5,25 +5,66 @@ import { assets } from "../assets/assets"; // If you have any static assets like
 import { ShopContext } from "../context/ShopContext";
 
 const Product = () => {
-  const { backendUrl, navigate } = useContext(ShopContext);
+  const { backendUrl, navigate, addToCart } = useContext(ShopContext);
   const { id } = useParams();
   const [productData, setProductData] = useState(null);
+  const [category, setCategory] = useState(""); // State for category name
+  const [wood, setWood] = useState(""); // State for wood name
   const [image, setImage] = useState("");
 
-  // Fetch product data from backend
   const fetchProductData = async () => {
     try {
       const response = await axios.get(
         `${backendUrl}/api/product/single/${id}`
       );
       if (response.data.success) {
-        setProductData(response.data.product);
-        setImage(response.data.product.image[0]); // Set the first image as default
+        const product = response.data.product;
+        setProductData(product);
+        setImage(product.image[0]); // Set the first image as default
+
+        // Fetch category once product data is available
+        if (product.category) {
+          fetchCategory(product.category);
+        }
+        if (product.wood) {
+          fetchWood(product.wood);
+        }
       } else {
         console.error("Error fetching product data:", response.data.message);
       }
     } catch (error) {
       console.error("Error fetching product data:", error);
+    }
+  };
+
+  // Fetch category data based on category ID
+  const fetchCategory = async (categoryId) => {
+    try {
+      const response = await axios.get(
+        `${backendUrl}/api/category/single/${categoryId}`
+      );
+      if (response.data.success) {
+        setCategory(response.data.category.name); // Set category name
+      } else {
+        console.error("Error fetching category:", response.data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching category:", error);
+    }
+  };
+
+  const fetchWood = async (woodId) => {
+    try {
+      const response = await axios.get(
+        `${backendUrl}/api/wood/single/${woodId}`
+      );
+      if (response.data.success) {
+        setWood(response.data.wood.name); // Set wood name
+      } else {
+        console.error("Error fetching wood:", response.data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching wood:", error);
     }
   };
 
@@ -74,7 +115,41 @@ const Product = () => {
             {productData.description}
           </p>
 
-          <button className="bg-black text-white px-8 py-3 text-sm active:bg-gray-700">
+          {/* Product category */}
+          <p className="mt-5 text-sm text-gray-500">
+            Category: {category || " Category Missing"}
+          </p>
+
+          {/* Product wood */}
+          <p className="mt-5 text-sm text-gray-500">
+            Wood: {wood || " Wood Missing"}
+          </p>
+
+          {/* ----------------- Product Dimensions ----------------- */}
+          <div className="flex gap-3 mt-5 mb-5 sm:w-4/5">
+            <div className="flex flex-col gap-1">
+              <p className="text-sm">Length</p>
+              <p className="text-sm">Breadth</p>
+              <p className="text-sm">Height</p>
+            </div>
+            <div className="flex flex-col gap-1">
+              <p className="text-sm">{productData.length} cm</p>
+              <p className="text-sm">{productData.breadth} cm</p>
+              <p className="text-sm">{productData.height} cm</p>
+            </div>
+          </div>
+          {/* ----------------- Add to Cart Button ----------------- */}
+          <button
+            onClick={() =>
+              addToCart(
+                productData._id,
+                productData.length,
+                productData.breadth,
+                productData.height
+              )
+            }
+            className="bg-black text-white px-8 py-3 text-sm active:bg-gray-700"
+          >
             ADD TO CART
           </button>
           <hr className="mt-8 sm:w-4/5" />
