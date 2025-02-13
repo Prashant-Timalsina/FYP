@@ -4,7 +4,7 @@ import { assets } from "../assets/assets";
 import { ShopContext } from "../context/ShopContext";
 
 const Navbar = () => {
-  const { navigate, showSearch, setShowSearch, getCartCount, token, setToken } =
+  const { navigate, showSearch, setShowSearch, cartCount, token, setToken } =
     useContext(ShopContext);
   const [visible, setVisible] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
@@ -115,7 +115,7 @@ const Navbar = () => {
             alt="Cart icon"
           />
           <p className="absolute right-[-5px] bottom-[-5px] w-4 text-center leading-4 bg-black text-white aspect-square rounded-full text-xs">
-            {/* {getCartCount()} */}
+            {cartCount}
           </p>
         </Link>
 

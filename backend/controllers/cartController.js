@@ -58,7 +58,14 @@ export const updateCart = async (req, res) => {
     const { itemId, length, breadth, height, quantity } = req.body;
     const userId = req.user.id;
 
-    if (!itemId || !length || !breadth || !height || !quantity) {
+    if (
+      !itemId ||
+      !length ||
+      !breadth ||
+      !height ||
+      quantity === undefined ||
+      quantity === null
+    ) {
       return res
         .status(400)
         .json({ success: false, message: "Please fill all fields" });
@@ -87,6 +94,10 @@ export const updateCart = async (req, res) => {
 
     if (quantity === 0) {
       user.cartData.splice(itemIndex, 1); // ✅ Remove item if quantity is 0
+      await user.save();
+      return res
+        .status(200)
+        .json({ success: true, message: "Item removed from cart" });
     } else {
       user.cartData[itemIndex].quantity = quantity; // ✅ Update quantity
     }
