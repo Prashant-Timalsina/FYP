@@ -19,7 +19,7 @@ const productSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
     },
-    woodName: {
+    wood: {
       type: String,
       required: [true, "Add Wood Name"],
     },

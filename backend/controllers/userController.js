@@ -6,7 +6,7 @@ import sendEmail from "../utils/emailService.js"; // Adjust path if needed
 import crypto from "crypto";
 
 const createToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "15h" });
 };
 
 const passwordValidation = /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]+$/;
