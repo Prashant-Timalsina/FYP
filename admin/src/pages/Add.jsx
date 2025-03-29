@@ -14,7 +14,7 @@ const AddProduct = () => {
   const [image3, setImage3] = useState(false);
   const [image4, setImage4] = useState(false);
   const [category, setCategory] = useState("");
-  const [woodName, setWoodName] = useState("");
+  const [wood, setWood] = useState("");
   const [length, setLength] = useState("");
   const [breadth, setBreadth] = useState("");
   const [height, setHeight] = useState("");
@@ -71,7 +71,7 @@ const AddProduct = () => {
     formData.append("description", description);
     formData.append("price", price);
     formData.append("category", category);
-    formData.append("woodName", woodName);
+    formData.append("wood", wood);
     formData.append("length", length);
     formData.append("breadth", breadth);
     formData.append("height", height);
@@ -80,6 +80,19 @@ const AddProduct = () => {
     image2 && formData.append("image2", image2);
     image3 && formData.append("image3", image3);
     image4 && formData.append("image4", image4);
+
+    // Debugging: Log form data before sending the request
+    console.log("Form Data Submitted:");
+    console.log({
+      description,
+      category,
+      wood,
+      length,
+      breadth,
+      height,
+      price,
+      images: [image1, image2, image3, image4].filter(Boolean), // Only include non-null images
+    });
 
     try {
       const response = await axios.post(
@@ -98,7 +111,7 @@ const AddProduct = () => {
         setImage4(false);
         setPrice("");
         setCategory("");
-        setWoodName("");
+        setWood("");
         setLength("");
         setBreadth("");
         setHeight("");
@@ -248,17 +261,17 @@ const AddProduct = () => {
           <p className="mb-2">Wood Name</p>
           <div className="flex gap-2 items-center">
             <select
-              onChange={(e) => setWoodName(e.target.value)}
-              value={woodName}
+              onChange={(e) => setWood(e.target.value)}
+              value={wood}
               className=" w-[40%] max-w-[250px] px-3 py-2 border rounded-md"
               required
             >
               <option value="" disabled>
                 Select wood
               </option>
-              {woods.map((wood) => (
-                <option key={wood._id} value={wood._id}>
-                  {wood.name}
+              {woods.map((w) => (
+                <option key={w._id} value={w._id}>
+                  {w.name}
                 </option>
               ))}
             </select>

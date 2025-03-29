@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import Home from "./pages/Home";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -20,19 +20,28 @@ import { Loader } from "lucide-react";
 import { useState, useEffect } from "react";
 import ResetPassword from "./pages/ResetPassword";
 import Profile from "./pages/Profile";
+import Payment from "./pages/Payment";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentFailure from "./pages/PaymentFailure";
+
 const App = () => {
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 1000);
+    }, 100);
 
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location]);
+
   return (
-    <div className="px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw]">
+    <div className="relative flex flex-col min-h-screen">
       <ToastContainer />
 
       {loading ? (
@@ -41,24 +50,32 @@ const App = () => {
         </div>
       ) : (
         <>
-          <Navbar />
-          <Searchbar />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/collection" element={<Collection />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/place-order" element={<PlaceOrder />} />
-            <Route path="/orders" element={<Orders />} />
-            <Route path="/product/:id" element={<Product />} />
-            <Route path="/custom-order" element={<CustomOrder />} />
-            <Route path="/profile" element={<Profile />} />
+          <div className="flex-1 px-4 sm:px-[5vw] md:px-[7vw] lg:px-[9vw] pb-20">
+            <Navbar />
+            <Searchbar />
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/collection" element={<Collection />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/cart" element={<Cart />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/place-order" element={<PlaceOrder />} />
+              <Route path="/orders" element={<Orders />} />
+              <Route path="/product/:id" element={<Product />} />
+              <Route path="/custom-order" element={<CustomOrder />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/payment" element={<Payment />} />
+              <Route path="/success-payment" element={<PaymentSuccess />} />
+              <Route path="/failure-payment" element={<PaymentFailure />} />
 
-            <Route path="/reset-password/:token" element={<ResetPassword />} />
-            <Route path="/*" element={<Error />} />
-          </Routes>
+              <Route
+                path="/reset-password/:token"
+                element={<ResetPassword />}
+              />
+              <Route path="/*" element={<Error />} />
+            </Routes>
+          </div>
           <Footer />
         </>
       )}

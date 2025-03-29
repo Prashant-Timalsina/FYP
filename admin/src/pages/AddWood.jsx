@@ -12,6 +12,7 @@ const AddWood = () => {
   const [image3, setImage3] = useState(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [price, setPrice] = useState(0);
   const [advantages, setAdvantages] = useState([""]);
 
   // Handles file selection for each image input
@@ -43,6 +44,7 @@ const AddWood = () => {
     const formData = new FormData();
     formData.append("name", name);
     formData.append("description", description);
+    formData.append("price", price);
     formData.append("advantages", JSON.stringify(advantages)); // Send advantages as JSON array
 
     // Append the images to the form data
@@ -60,6 +62,7 @@ const AddWood = () => {
         toast.success(response.data.message);
         setName("");
         setDescription("");
+        setPrice(0);
         setAdvantages([""]);
         setImage1(null);
         setImage2(null);
@@ -154,6 +157,16 @@ const AddWood = () => {
           onChange={(e) => setDescription(e.target.value)}
           className="w-full px-3 py-2 border rounded-md"
           placeholder="Enter wood description"
+        />
+      </div>
+      <div className="mb-4">
+        <label className="block mb-2">Wood Price</label>
+        <input
+          type="number"
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+          className="w-full px-3 py-2 border rounded-md"
+          placeholder="Enter wood price"
         />
       </div>
 

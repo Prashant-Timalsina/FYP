@@ -1,4 +1,6 @@
 import userModel from "../models/userModel.js";
+import categoryModel from "../models/categoryModel.js";
+import woodModel from "../models/WoodModel.js";
 
 // ADD TO CART
 export const addToCart = async (req, res) => {
@@ -126,8 +128,211 @@ export const getCart = async (req, res) => {
   }
 };
 
-// export default {
-//   // addToCart,
-//   updateCart,
-//   getCart,
+export const clearCart = async (req, res) => {
+  try {
+    const userID = req.user.id;
+    const user = await userModel.findById(userID);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    user.cartData = [];
+    await user.save();
+    res.status(200).json({ success: true, message: "Cart cleared" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// export const customAdd = async (req, res) => {
+//   try {
+//     if (!req.user) {
+//       return res
+//         .status(401)
+//         .json({ success: false, message: "Unauthorized: No user found" });
+//     }
+
+//     const { description, category, wood, length, breadth, height } = req.body;
+//     console.log("Request Body:", req.body);
+
+//     // Fetch category and wood data
+//     const categoryData = await categoryModel.findById(category);
+//     console.log("Category Data:", categoryData);
+
+//     const woodData = await woodModel.findById(wood);
+//     console.log("Wood Data:", woodData);
+
+//     if (!categoryData || !woodData) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Invalid category or wood selection",
+//       });
+//     }
+
+//     // Calculate the price based on dimensions and category/wood price
+//     const dimension = length * breadth * height;
+//     console.log("Dimension:", dimension);
+
+//     const price = categoryData.price * woodData.price * dimension;
+//     console.log("Price:", price);
+
+//     // Handle the images
+//     const image1 = req.files?.image1?.[0]; // Assuming 'image1' is the name in the form
+//     const images = [image1].filter(Boolean); // Ensure images array isn't empty
+//     let imagesURL = [];
+
+//     if (images.length > 0) {
+//       imagesURL = await Promise.all(
+//         images.map(async (item) => {
+//           const result = await cloudinary.uploader.upload(item.path, {
+//             resource_type: "image",
+//           });
+//           return result.secure_url; // Image URL from Cloudinary
+//         })
+//       );
+//     }
+
+//     // Prepare the custom order data
+//     const customOrder = {
+//       id: `custom-${Date.now()}`, // Generate a unique ID for the custom order
+//       description,
+//       category: categoryData._id,
+//       wood: woodData._id,
+//       image: imagesURL, // Store image URLs here
+//       length: Number(length), // Ensure length is a number
+//       breadth: Number(breadth), // Ensure breadth is a number
+//       height: Number(height), // Ensure height is a number
+//       price: price, // Store price as a number
+//       quantity: 1, // Default to 1 for custom orders
+//     };
+//     console.log("Custom Order:", customOrder);
+
+//     // Find the user and add the custom order to their cart
+//     const user = await userModel.findById(req.user.id);
+//     if (!user) {
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "User not found" });
+//     }
+
+//     if (!Array.isArray(user.cartData)) user.cartData = [];
+
+//     // Push the custom order to the user's cart
+//     user.cartData.push(customOrder);
+
+//     // Save the user and respond
+//     await user.save();
+//     res
+//       .status(201)
+//       .json({ success: true, message: "Custom order added to cart" });
+//   } catch (error) {
+//     res.status(500).json({ success: false, message: error.message });
+//   }
 // };
+
+export const customAdd = async (req, res) => {
+  try {
+    // Check if user is authenticated
+    if (!req.user) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Unauthorized: No user found" });
+    }
+
+    const { description, category, wood, length, breadth, height } = req.body;
+
+    // Validate inputs
+    if (!description || !category || !wood || !length || !breadth || !height) {
+      return res
+        .status(400)
+        .json({ success: false, message: "All fields are required" });
+    }
+
+    if (isNaN(length) || isNaN(breadth) || isNaN(height)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Dimensions must be valid numbers" });
+    }
+
+    // Fetch category and wood data safely
+    let categoryData, woodData;
+    try {
+      categoryData = await categoryModel.findById(category);
+      woodData = await woodModel.findById(wood);
+    } catch (err) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Invalid category or wood ID format",
+        });
+    }
+
+    if (!categoryData || !woodData) {
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Invalid category or wood selection",
+        });
+    }
+
+    // Calculate price
+    const dimension = Number(length) * Number(breadth) * Number(height);
+    const price = categoryData.price * woodData.price * dimension;
+
+    // Handle image upload (ensure files exist)
+    const image1 = req.files?.image1?.[0];
+    const images = [image1].filter(Boolean);
+    let imagesURL = [];
+
+    if (images.length > 0) {
+      imagesURL = await Promise.all(
+        images.map(async (item) => {
+          if (!item.mimetype.startsWith("image/")) {
+            throw new Error("Invalid file type. Only images are allowed.");
+          }
+          const result = await cloudinary.uploader.upload(item.path, {
+            resource_type: "image",
+          });
+          return result.secure_url;
+        })
+      );
+    }
+
+    // Prepare the custom order
+    const customOrder = {
+      id: `custom-${Date.now()}`,
+      description,
+      category: categoryData._id,
+      wood: woodData._id,
+      image: imagesURL,
+      length: Number(length),
+      breadth: Number(breadth),
+      height: Number(height),
+      price,
+      quantity: 1,
+    };
+
+    // Find and update user cart
+    const user = await userModel.findById(req.user.id);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    await userModel.updateOne(
+      { _id: req.user.id },
+      { $push: { cartData: customOrder } } // Use MongoDB’s $push operator
+    );
+
+    return res
+      .status(201)
+      .json({ success: true, message: "Custom order added to cart" });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};

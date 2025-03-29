@@ -1,16 +1,16 @@
 import React, { useEffect, useState, useContext } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-// import { backendUrl } from "../App";
 import { assets } from "../assets/assets";
 import { AdminContext } from "../context/AdminContext";
 
 const Product = () => {
-  const { backendUrl, navigate } = useContext(AdminContext);
+  const { backendUrl } = useContext(AdminContext);
   const { id } = useParams();
-  // const navigate = useNavigate();
+  const navigate = useNavigate();
   const [productData, setProductData] = useState(null);
   const [category, setCategory] = useState(""); // State for category name
+  const [wood, setWood] = useState(""); // State for wood name
   const [image, setImage] = useState("");
 
   // Fetch product data from the backend
@@ -27,6 +27,11 @@ const Product = () => {
         // Fetch category once product data is available
         if (product.category) {
           fetchCategory(product.category);
+        }
+
+        // Fetch wood once product data is available
+        if (product.wood) {
+          fetchWood(product.wood);
         }
       } else {
         console.error("Error fetching product data:", response.data.message);
@@ -52,13 +57,28 @@ const Product = () => {
     }
   };
 
+  const fetchWood = async (woodId) => {
+    try {
+      const response = await axios.get(
+        `${backendUrl}/api/wood/single/${woodId}`
+      );
+      if (response.data.success) {
+        setWood(response.data.wood.name); // Set wood name
+      } else {
+        console.error("Error fetching wood:", response.data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching wood:", error);
+    }
+  };
+
   // Fetch product data on component mount
   useEffect(() => {
     fetchProductData();
   }, [id]);
 
   const handleUpdate = (id) => {
-    navigate(`/update/${id}`);
+    navigate(`/updateProduct/${id}`);
   };
 
   return productData ? (
@@ -98,10 +118,14 @@ const Product = () => {
             ))}
             <p className="pl-2">(122)</p>
           </div>
+          {/* Show category name */}
           <p className="mt-5 text-sm text-gray-500">
             Category: {category || "Loading..."}
-          </p>{" "}
-          {/* Show category name */}
+          </p>
+          {/* Show wood name */}
+          <p className="mt-2 text-sm text-gray-500">
+            Wood: {wood || "Loading..."}
+          </p>
           <p className="mt-5 text-3xl font-medium">${productData.price}</p>
           <p className="mt-5 text-gray-500 md:w-4/5">
             {productData.description}

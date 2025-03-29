@@ -63,7 +63,6 @@ const Navbar = () => {
                 alt="Profile icon"
                 onClick={() => setVisible(!visible)}
               />
-
               {visible && (
                 <div className="absolute right-0 pt-3 z-50">
                   <div className="flex flex-col px-5 gap-2 w-32 bg-slate-200 rounded">

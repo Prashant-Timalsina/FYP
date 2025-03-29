@@ -5,7 +5,7 @@ import cloudinary from "cloudinary";
 // Create a new category
 export const createCategory = async (req, res) => {
   try {
-    const { name, description } = req.body;
+    const { name, description, price } = req.body;
 
     const dupCategory = await Category.findOne({ name });
     if (dupCategory) {
@@ -29,6 +29,7 @@ export const createCategory = async (req, res) => {
     const categorylist = {
       name,
       description,
+      price,
       image: imageURL,
       date: Date.now(),
     };
@@ -99,7 +100,8 @@ export const getCategoryById = async (req, res) => {
 export const updateCategory = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description } = req.body;
+    const { name, description, price } = req.body;
+    console.log(price);
 
     const image = req.files.image && req.files.image[0];
     let imageURL = null;
@@ -112,7 +114,7 @@ export const updateCategory = async (req, res) => {
 
     const updatedCategory = await Category.findByIdAndUpdate(
       id,
-      { name, description, image: imageURL },
+      { name, description, price, image: imageURL },
       { new: true, runValidators: true }
     );
 
