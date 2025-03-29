@@ -3,6 +3,7 @@ import { ShopContext } from "../context/ShopContext";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { assets } from "../assets/assets";
+import api from "../api";
 
 const Login = () => {
   const [currentState, setCurrentState] = useState("Login");
@@ -18,7 +19,7 @@ const Login = () => {
     try {
       if (currentState === "Login") {
         // Login request
-        const response = await axios.post(`${backendUrl}/api/user/login`, {
+        const response = await api.post(`/user/login`, {
           email,
           password,
         });
@@ -33,7 +34,7 @@ const Login = () => {
         }
       } else {
         // SignUp request
-        const response = await axios.post(`${backendUrl}/api/user/register`, {
+        const response = await api.post(`/user/register`, {
           name,
           email,
           password,

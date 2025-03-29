@@ -1,5 +1,5 @@
 import React, { useContext } from "react";
-import { Route, Routes, Navigate, Outlet } from "react-router-dom";
+import { Route, Routes, Navigate, Outlet, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
 import Home from "./pages/Home";
@@ -16,34 +16,42 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { AdminContext } from "./context/AdminContext";
 import UserList from "./pages/UserList";
+import UpdateWood from "./pages/UpdateWood";
 
 export const currency = "$";
 
 const ProtectedRoute = () => {
   const { token } = useContext(AdminContext);
-  return token ? <Outlet /> : <Navigate to="/login" replace />;
+  return token ? <Outlet /> : <Navigate to="/" replace />;
 };
 
 const App = () => {
   const { token } = useContext(AdminContext);
+  const location = useLocation();
+  const isLoginPage = location.pathname === "/";
 
   return (
     <div className="bg-gray-50 min-h-screen">
       <ToastContainer />
-      {token ? <Navbar /> : null}
+      {!isLoginPage && <Navbar />}
       <hr />
       <div className="flex">
-        {token ? <Sidebar /> : null}
-        <div className="w-[70%] mx-auto ml-[max(5vw,25px)] my-8 text-gray-600 text-base">
+        {!isLoginPage && <Sidebar />}
+        <div
+          className={`w-[70%] mx-auto ml-[max(5vw,25px)] my-8 text-gray-600 text-base ${
+            !isLoginPage ? "" : "w-full"
+          }`}
+        >
           <Routes>
-            <Route path="/login" element={<Login />} />
+            <Route path="/" element={<Login />} />
 
             {/* Protected Routes */}
             <Route element={<ProtectedRoute />}>
-              <Route path="/" element={<Home />} />
+              <Route path="/home" element={<Home />} />
               <Route path="/add" element={<Add />} />
               <Route path="/updateProduct/:id" element={<UpdateProduct />} />
               <Route path="/updateCategory/:id" element={<UpdateCategory />} />
+              <Route path="/updateWood/:id" element={<UpdateWood />} />
               <Route path="/addCategory" element={<AddCategory />} />
               <Route path="/addWood" element={<AddWood />} />
               <Route path="/list" element={<List />} />

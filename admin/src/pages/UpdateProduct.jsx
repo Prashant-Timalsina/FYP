@@ -1,22 +1,20 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-// import { backendUrl } from "../App";
 import { toast } from "react-toastify";
 import { assets } from "../assets/assets"; // For static assets like image placeholders
 import { AdminContext } from "../context/AdminContext";
 
-const UpdateProduct = ({ token }) => {
-  const { backendUrl, navigate } = useContext(AdminContext);
+const UpdateProduct = () => {
+  const { backendUrl, navigate, token } = useContext(AdminContext);
   const { id } = useParams();
-  // const navigate = useNavigate();
   const [productData, setProductData] = useState(null);
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState("");
   const [category, setCategory] = useState("");
-  const [woodName, setWoodName] = useState("");
+  const [wood, setWood] = useState("");
   const [length, setLength] = useState("");
   const [breadth, setBreadth] = useState("");
   const [height, setHeight] = useState("");
@@ -27,6 +25,7 @@ const UpdateProduct = ({ token }) => {
   const [image4, setImage4] = useState(null);
 
   const [categories, setCategories] = useState([]);
+  const [woods, setWoods] = useState([]);
 
   // Fetch categories for the dropdown
   useEffect(() => {
@@ -45,7 +44,25 @@ const UpdateProduct = ({ token }) => {
     };
 
     fetchCategories();
-  }, []);
+  }, [backendUrl]);
+
+  useEffect(() => {
+    const fetchWoods = async () => {
+      try {
+        const response = await axios.get(`${backendUrl}/api/wood/all`);
+        if (response.data.success) {
+          setWoods(response.data.woods);
+        } else {
+          toast.error(response.data.message);
+        }
+      } catch (error) {
+        console.error("Error fetching woods:", error);
+        toast.error("Error fetching woods");
+      }
+    };
+
+    fetchWoods();
+  }, [backendUrl]);
 
   // Fetch the product details
   useEffect(() => {
@@ -60,8 +77,10 @@ const UpdateProduct = ({ token }) => {
           setName(product.name);
           setDescription(product.description);
           setPrice(product.price);
-          setCategory(product.category);
-          setWoodName(product.woodName);
+          setCategory(
+            product.category || (categories[0] && categories[0]._id) || ""
+          ); // Ensure category ID is set
+          setWood(product.wood || (woods[0] && woods[0]._id) || ""); // Ensure wood ID is set
           setLength(product.length);
           setBreadth(product.breadth);
           setHeight(product.height);
@@ -82,7 +101,7 @@ const UpdateProduct = ({ token }) => {
     };
 
     fetchProductDetails();
-  }, [id]);
+  }, [id, backendUrl, categories, woods]);
 
   const handleImageChange = (e, setImage) => {
     setImage(e.target.files[0]);
@@ -96,7 +115,7 @@ const UpdateProduct = ({ token }) => {
     formData.append("description", description);
     formData.append("price", price);
     formData.append("category", category);
-    formData.append("woodName", woodName);
+    formData.append("wood", wood);
     formData.append("length", length);
     formData.append("breadth", breadth);
     formData.append("height", height);
@@ -217,6 +236,26 @@ const UpdateProduct = ({ token }) => {
             {categories.map((cat) => (
               <option key={cat._id} value={cat._id}>
                 {cat.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div className="flex flex-col w-full gap-4 mb-4">
+        <div className="flex flex-col w-full">
+          <p className="mb-2">Wood</p>
+          <select
+            onChange={(e) => setWood(e.target.value)}
+            value={wood}
+            className="w-[40%] max-w-[250px] px-3 py-2 border rounded-md"
+            required
+          >
+            <option value="" disabled>
+              Select wood
+            </option>
+            {woods.map((w) => (
+              <option key={w._id} value={w._id}>
+                {w.name}
               </option>
             ))}
           </select>

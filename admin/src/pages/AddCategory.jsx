@@ -11,6 +11,7 @@ const AddCategory = () => {
   const [image, setImage] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [price, setPrice] = useState(0);
   // const navigate = useNavigate();
 
   const handleImageChange = (e) => {
@@ -21,6 +22,7 @@ const AddCategory = () => {
     const formData = new FormData();
     formData.append("name", name);
     formData.append("description", description);
+    formData.append("price", price);
 
     image && formData.append("image", image);
 
@@ -35,6 +37,7 @@ const AddCategory = () => {
         setName("");
         setImage(false);
         setDescription("");
+        setPrice(0);
         navigate("/add");
       } else {
         toast.error(response.data.message);
@@ -87,6 +90,16 @@ const AddCategory = () => {
           onChange={(e) => setDescription(e.target.value)}
           className="w-full px-3 py-2 border rounded-md"
           placeholder="Enter category description"
+        />
+      </div>
+      <div className="mb-4">
+        <label className="block mb-2">Category Price</label>
+        <input
+          type="number"
+          value={price}
+          onChange={(e) => setPrice(e.target.value)}
+          className="w-full px-3 py-2 border rounded-md"
+          placeholder="Enter category price"
         />
       </div>
       <div className="flex justify-end gap-2">

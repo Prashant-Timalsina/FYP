@@ -16,6 +16,11 @@ const categorySchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    price: {
+      type: Number,
+      default: 0,
+      required: [true, "Enter Category Price"],
+    },
     // isbox: { type: Boolean, default: false },
     // boxCount: {type: Number}
   },

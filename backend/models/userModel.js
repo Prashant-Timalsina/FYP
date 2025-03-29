@@ -37,6 +37,19 @@ const userSchema = new mongoose.Schema(
           breadth: Number,
           height: Number,
           quantity: Number,
+          description: { type: String, required: false }, // Optional field
+          category: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Category",
+            required: false,
+          }, // Optional field
+          wood: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Wood",
+            required: false,
+          }, // Optional field
+          image: { type: [String], required: false }, // Array of images, optional
+          price: { type: Number, required: false }, // Optional field
         },
       ],
       default: [], // ✅ Now cart is an array

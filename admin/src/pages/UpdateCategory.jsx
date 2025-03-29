@@ -13,6 +13,7 @@ const UpdateCategory = ({ token }) => {
   const [categoryData, setCategoryData] = useState(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [price, setPrice] = useState(0);
   const [categoryImage, setCategoryImage] = useState(null); // New state for category image
 
   // Fetch the category details
@@ -27,6 +28,7 @@ const UpdateCategory = ({ token }) => {
           setCategoryData(category);
           setName(category.name);
           setDescription(category.description);
+          setPrice(category.price);
           setCategoryImage(category.image || null); // Set the category image if available
         } else {
           toast.error(response.data.message);
@@ -50,6 +52,7 @@ const UpdateCategory = ({ token }) => {
     const formData = new FormData();
     formData.append("name", name);
     formData.append("description", description);
+    formData.append("price", price);
 
     if (categoryImage instanceof File) {
       formData.append("image", categoryImage); // Append the new image if it's a file
@@ -129,6 +132,19 @@ const UpdateCategory = ({ token }) => {
           value={description}
           className="w-full max-w-[500px] px-3 py-2 border rounded-md"
           placeholder="Enter category description"
+          required
+        />
+      </div>
+
+      {/* Category Price */}
+      <div className="w-full">
+        <p className="mb-2">Category Price</p>
+        <input
+          onChange={(e) => setPrice(e.target.value)}
+          value={price}
+          className="w-full max-w-[500px] px-3 py-2 border rounded-md"
+          type="number"
+          placeholder="Enter category price"
           required
         />
       </div>

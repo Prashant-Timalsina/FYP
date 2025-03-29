@@ -18,7 +18,7 @@ const List = () => {
     const fetchData = async () => {
       try {
         const productsResponse = await axios.get(
-          `${backendUrl}/api/product/list`
+          `${backendUrl}/api/product/list?page=1&limit=0`
         );
         const categoriesResponse = await axios.get(
           `${backendUrl}/api/category/all`
@@ -47,6 +47,10 @@ const List = () => {
 
   const handleUpdateCategory = (id) => {
     navigate(`/updateCategory/${id}`);
+  };
+
+  const handleUpdateWood = (id) => {
+    navigate(`/updateWood/${id}`);
   };
 
   const handleDeleteProduct = async (id) => {
@@ -81,6 +85,24 @@ const List = () => {
         }
       } catch (error) {
         console.error("Error deleting category:", error);
+      }
+    }
+  };
+
+  const handleDeleteWood = async (id) => {
+    if (window.confirm("Are you sure you want to delete this wood?")) {
+      try {
+        const response = await axios.delete(
+          `${backendUrl}/api/wood/remove/${id}`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        if (response.data.success) {
+          setWoodNames((prevWoods) =>
+            prevWoods.filter((wood) => wood._id !== id)
+          );
+        }
+      } catch (error) {
+        console.error("Error deleting wood:", error);
       }
     }
   };
@@ -238,12 +260,14 @@ const List = () => {
                       <div className="flex flex-row gap-4">
                         {/* Images Container */}
                         <div className="w-16 h-16 flex-shrink-0 flex items-center justify-center">
-                          {wood.images.length > 0 && (
+                          {wood.images?.length > 0 ? (
                             <img
                               src={wood.images[0] || assets.defaultImage}
                               alt={wood.name}
                               className="w-full h-full object-cover"
                             />
+                          ) : (
+                            <p>No image</p>
                           )}
                         </div>
 
@@ -262,7 +286,8 @@ const List = () => {
                           {/* Advantages List */}
                           <div className="flex flex-col">
                             <b>Advantages:</b>
-                            {wood.advantages && wood.advantages.length > 0 ? (
+                            {Array.isArray(wood.advantages) &&
+                            wood.advantages.length > 0 ? (
                               wood.advantages.map((advantage, index) => (
                                 <p
                                   key={index}
@@ -280,7 +305,7 @@ const List = () => {
 
                   <div className="flex items-center justify-center">
                     <button
-                      onClick={() => handleUpdateCategory(wood._id)} // Assuming a similar update function
+                      onClick={() => handleUpdateWood(wood._id)} // Assuming a similar update function
                       aria-label={`Update wood ${wood.name}`}
                       className="text-center text-blue-400 hover:text-blue-800 cursor-pointer"
                     >
@@ -290,7 +315,7 @@ const List = () => {
                   <img
                     className="w-2 h-2 cursor-pointer opacity-50 hover:opacity-100"
                     src={assets.close}
-                    onClick={() => handleDeleteCategory(wood._id)} // Assuming a similar delete function
+                    onClick={() => handleDeleteWood(wood._id)} // Assuming a similar delete function
                     alt="Delete"
                     aria-label={`Delete wood ${wood.name}`}
                   />

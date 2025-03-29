@@ -3,9 +3,9 @@ import { mongoose } from "mongoose";
 const woodSchema = new mongoose.Schema(
   {
     name: {
-          type: String,
-          unique: true,
-          trim: true,
+      type: String,
+      unique: true,
+      trim: true,
       required: [true, "Enter Wood Name"],
     },
     description: {
@@ -16,6 +16,11 @@ const woodSchema = new mongoose.Schema(
       type: [String], // Array of image URLs
       required: true,
     },
+    price: {
+      type: Number,
+      default: 0,
+      required: [true, "Enter Wood Price"],
+    },
     advantages: {
       type: [String], // Array of advantage strings
       default: [], // Default to an empty array if not provided
@@ -24,9 +29,6 @@ const woodSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-
-
-const woodModel =
-  mongoose.models.wood || mongoose.model("Wood", woodSchema);
+const woodModel = mongoose.models.wood || mongoose.model("Wood", woodSchema);
 
 export default woodModel;

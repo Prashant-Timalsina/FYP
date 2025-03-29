@@ -20,9 +20,13 @@ const productSchema = new mongoose.Schema(
       ref: "Category",
     },
     wood: {
-      type: String,
-      required: [true, "Add Wood Name"],
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Wood",
     },
+    // wood: {
+    //   type: String,
+    //   required: [true, "Add Wood Name"],
+    // },
     length: {
       type: Number,
       default: null, // Default to null if not provided

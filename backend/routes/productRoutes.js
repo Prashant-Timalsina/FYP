@@ -7,6 +7,7 @@ import {
   listProduct,
   removeProduct,
   updateProduct,
+  listRelatedProduct,
 } from "../controllers/productController.js";
 import adminAuth from "../middlewares/AdminAuth.js";
 import authUser from "../middlewares/UserAuth.js";
@@ -45,6 +46,8 @@ productRouter.get("/single/:id", singleProduct);
 
 // List all products (GET request for reading multiple resources)
 productRouter.get("/list", listProduct);
+
+productRouter.get("/related", listRelatedProduct);
 
 // Remove a product (DELETE request for deleting a resource)
 productRouter.delete("/remove/:id", adminAuth, removeProduct);

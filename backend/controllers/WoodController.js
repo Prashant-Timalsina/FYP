@@ -1,9 +1,9 @@
-import Wood from "../models/woodModel.js"; // Assuming you have a Wood model
+import Wood from "../models/WoodModel.js"; // Assuming you have a Wood model
 import { v2 as cloudinary } from "cloudinary";
 
 export const createWood = async (req, res) => {
   try {
-    const { name, description, advantages } = req.body;
+    const { name, description, price, advantages } = req.body;
 
     // Check if the wood name already exists
     const existingWood = await Wood.findOne({ name });
@@ -40,6 +40,7 @@ export const createWood = async (req, res) => {
       name,
       description,
       images,
+      price,
       advantages: parsedAdvantages,
       date: Date.now(),
     };
@@ -111,7 +112,7 @@ export const getWoodById = async (req, res) => {
 export const updateWood = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, advantages } = req.body;
+    const { name, description, price, advantages } = req.body;
 
     // Initialize images array for update
     const images = [];
@@ -135,6 +136,7 @@ export const updateWood = async (req, res) => {
       {
         name,
         description,
+        price,
         images,
         advantages: advantages ? JSON.parse(advantages) : [],
       },

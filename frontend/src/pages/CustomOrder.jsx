@@ -1,32 +1,30 @@
 import React, { useState, useEffect, useContext } from "react";
-import { assets } from "../assets/assets";
+import { assets } from "../assets/assets.js";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { ShopContext } from "../context/ShopContext";
 
 const AddProduct = () => {
   const { backendUrl, navigate, token } = useContext(ShopContext);
-  const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [price, setPrice] = useState("");
-  const [image1, setImage1] = useState(false);
-  const [image2, setImage2] = useState(false);
-  const [image3, setImage3] = useState(false);
-  const [image4, setImage4] = useState(false);
   const [category, setCategory] = useState("");
-  const [woodName, setWoodName] = useState("");
+  const [wood, setwood] = useState("");
   const [length, setLength] = useState("");
   const [breadth, setBreadth] = useState("");
   const [height, setHeight] = useState("");
+  const [price, setPrice] = useState("");
   const [categories, setCategories] = useState([]);
   const [woods, setWoods] = useState([]);
+  const [image1, setImage1] = useState(null);
+  const [image2, setImage2] = useState(null);
+  const [image3, setImage3] = useState(null);
+  const [image4, setImage4] = useState(null);
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        console.log(token);
-
         const response = await axios.get(`${backendUrl}/api/category/all`);
+
         if (response.data.success) {
           setCategories(response.data.categories);
         } else {
@@ -39,12 +37,14 @@ const AddProduct = () => {
     };
 
     fetchCategories();
-  }, []);
+  }, [backendUrl, token]);
 
   useEffect(() => {
     const fetchWoods = async () => {
       try {
-        const response = await axios.get(`${backendUrl}/api/wood/all`);
+        const response = await axios.get(`${backendUrl}/api/wood/all`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         if (response.data.success) {
           setWoods(response.data.woods);
         } else {
@@ -57,7 +57,21 @@ const AddProduct = () => {
     };
 
     fetchWoods();
-  }, []);
+  }, [backendUrl, token]);
+
+  const calculatePrice = () => {
+    const selectedCategory = categories.find((c) => c._id === category);
+    const selectedWood = woods.find((w) => w._id === wood);
+
+    if (!selectedCategory || !selectedWood || !length || !breadth || !height) {
+      toast.warning("Please select category, wood and enter dimensions");
+      return;
+    }
+
+    const totalPrice =
+      selectedCategory.price * selectedWood.price * length * breadth * height;
+    setPrice(totalPrice.toFixed(2));
+  };
 
   const handleImageChange = (e, setImage) => {
     setImage(e.target.files[0]);
@@ -66,51 +80,69 @@ const AddProduct = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (!description || !category || !wood || !length || !breadth || !height) {
+      toast.error("Please fill all required fields.");
+      return;
+    }
+
+    if (!price) {
+      toast.error("Please calculate price before submitting");
+      return;
+    }
+
     const formData = new FormData();
-    formData.append("name", name);
     formData.append("description", description);
-    formData.append("price", price);
     formData.append("category", category);
-    formData.append("woodName", woodName);
+    formData.append("wood", wood);
     formData.append("length", length);
     formData.append("breadth", breadth);
     formData.append("height", height);
+    formData.append("price", price);
 
-    image1 && formData.append("image1", image1);
-    image2 && formData.append("image2", image2);
-    image3 && formData.append("image3", image3);
-    image4 && formData.append("image4", image4);
+    if (image1) formData.append("image1", image1);
+    if (image2) formData.append("image2", image2);
+    if (image3) formData.append("image3", image3);
+    if (image4) formData.append("image4", image4);
+
+    // Debugging: Log form data before sending the request
+    console.log("Form Data Submitted:");
+    console.log({
+      description,
+      category,
+      wood,
+      length,
+      breadth,
+      height,
+      price,
+      images: [image1, image2, image3, image4].filter(Boolean), // Only include non-null images
+    });
 
     try {
       const response = await axios.post(
-        `${backendUrl}/api/product/add`,
+        `${backendUrl}/api/cart/addCustom`,
         formData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (response.data.success) {
         toast.success(response.data.message);
-        setName("");
         setDescription("");
-        setImage1(false);
-        setImage2(false);
-        setImage3(false);
-        setImage4(false);
-        setPrice("");
+        setImage1(null);
+        setImage2(null);
+        setImage3(null);
+        setImage4(null);
         setCategory("");
-        setWoodName("");
+        setwood("");
         setLength("");
         setBreadth("");
         setHeight("");
-        navigate("/add");
+        setPrice("");
+        navigate("/cart");
       } else {
         toast.error(response.data.message);
       }
     } catch (error) {
-      console.error(
-        "Error in form submission: ",
-        error.response?.data || error.message
-      );
+      console.error("Error in form submission:", error.response?.data || error);
       toast.error(error.response?.data?.message || error.message);
     }
   };
@@ -121,8 +153,10 @@ const AddProduct = () => {
       className="flex flex-col w-full items-start gap-3 p-6 bg-white shadow-md rounded-md"
     >
       <h1 className="text-2xl font-bold mb-4">Add Product</h1>
+
+      {/* Image Upload */}
       <div>
-        <p className="mb-2">Upload Image</p>
+        <p className="mb-2">Upload Image(Design Reference only)</p>
         <div className="flex gap-2">
           <label htmlFor="image1">
             <img
@@ -179,18 +213,7 @@ const AddProduct = () => {
         </div>
       </div>
 
-      <div className="w-full">
-        <p className="mb-2">Product Name</p>
-        <input
-          onChange={(e) => setName(e.target.value)}
-          value={name}
-          className="w-full max-w-[500px] px-3 py-2 border rounded-md"
-          type="text"
-          placeholder="Enter product name"
-          required
-        />
-      </div>
-
+      {/* Description */}
       <div className="w-full">
         <p className="mb-2">Product Description</p>
         <textarea
@@ -202,124 +225,77 @@ const AddProduct = () => {
         />
       </div>
 
-      <div className="w-full">
-        <p className="mb-2">Price</p>
-        <input
-          onChange={(e) => setPrice(e.target.value)}
-          value={price}
-          className="w-full max-w-[100px] px-3 py-2 border rounded-md"
-          type="number"
-          placeholder="0"
-          min="0"
-          required
-        />
-      </div>
-
+      {/* Category & Wood Selection */}
       <div className="flex flex-col w-full gap-4 mb-4">
-        <div className="flex flex-col w-full">
+        <div>
           <p className="mb-2">Category</p>
-          <div className="flex gap-2 items-center">
-            <select
-              onChange={(e) => setCategory(e.target.value)}
-              value={category}
-              className="w-[40%] max-w-[250px] px-3 py-2 border rounded-md"
-              required
-            >
-              <option value="" disabled>
-                Select category
+          <select
+            onChange={(e) => setCategory(e.target.value)}
+            value={category}
+            className="px-3 py-2 border rounded-md"
+            required
+          >
+            <option value="" disabled>
+              Select category
+            </option>
+            {categories.map((cat) => (
+              <option key={cat._id} value={cat._id}>
+                {cat.name}: {cat.price}
               </option>
-              {categories.map((cat) => (
-                <option key={cat._id} value={cat._id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              onClick={() => navigate("/addCategory")}
-              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-            >
-              Add Category
-            </button>
-          </div>
+            ))}
+          </select>
         </div>
 
-        <div className="flex flex-col w-full">
+        <div>
           <p className="mb-2">Wood Name</p>
-          <div className="flex gap-2 items-center">
-            <select
-              onChange={(e) => setWoodName(e.target.value)}
-              value={woodName}
-              className=" w-[40%] max-w-[250px] px-3 py-2 border rounded-md"
-              required
-            >
-              <option value="" disabled>
-                Select wood
+          <select
+            onChange={(e) => setwood(e.target.value)}
+            value={wood}
+            className="px-3 py-2 border rounded-md"
+            required
+          >
+            <option value="" disabled>
+              Select wood
+            </option>
+            {woods.map((wood) => (
+              <option key={wood._id} value={wood._id}>
+                {wood.name}: {wood.price}
               </option>
-              {woods.map((wood) => (
-                <option key={wood._id} value={wood._id}>
-                  {wood.name}
-                </option>
-              ))}
-            </select>
-            <button
-              type="button"
-              onClick={() => navigate("/addWood")}
-              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-            >
-              Add Wood
-            </button>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Dimensions & Price Calculation */}
+      <div className="flex gap-2">
+        {[
+          ["Length", setLength],
+          ["Breadth", setBreadth],
+          ["Height", setHeight],
+        ].map(([label, setter]) => (
+          <div key={label}>
+            <p className="mb-2">{label}</p>
+            <input
+              type="number"
+              min="0"
+              className="px-3 py-2 border rounded-md"
+              onChange={(e) => setter(e.target.value)}
+            />
           </div>
-        </div>
+        ))}
       </div>
 
-      <div className="flex gap-2 w-full">
-        <div className="flex flex-col">
-          <p className="mb-2">Length</p>
-          <input
-            onChange={(e) => setLength(e.target.value)}
-            value={length}
-            className="w-full max-w-[100px] px-3 py-2 border rounded-md"
-            type="number"
-            placeholder="0"
-            min="0"
-            required
-          />
-        </div>
-        <div className="flex flex-col">
-          <p className="mb-2">Breadth</p>
-          <input
-            onChange={(e) => setBreadth(e.target.value)}
-            value={breadth}
-            className="w-full max-w-[100px] px-3 py-2 border rounded-md"
-            type="number"
-            placeholder="0"
-            min="0"
-            required
-          />
-        </div>
-        <div className="flex flex-col">
-          <p className="mb-2">Height</p>
-          <input
-            onChange={(e) => setHeight(e.target.value)}
-            value={height}
-            className="w-full max-w-[100px] px-3 py-2 border rounded-md"
-            type="number"
-            placeholder="0"
-            min="0"
-            required
-          />
-        </div>
-      </div>
+      <button type="button" onClick={calculatePrice}>
+        Calculate Price
+      </button>
+      <span>Price: {price}</span>
 
-      <div className="w-full mt-7">
-        <button
-          type="submit"
-          className="w-36 py-3 mt-4 bg-black text-white rounded-md hover:bg-blue-600 transition-colors"
-        >
-          Add Product
-        </button>
-      </div>
+      <button
+        type="submit"
+        className="mt-4 bg-black text-white px-4 py-2 rounded-md"
+      >
+        Add To Cart
+      </button>
     </form>
   );
 };

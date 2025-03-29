@@ -1,5 +1,6 @@
 import productModel from "../models/productModel.js";
 import { v2 as cloudinary } from "cloudinary";
+import ApiFeature from "../utils/ApiFeature.js";
 
 const addProduct = async (req, res) => {
   try {
@@ -8,11 +9,13 @@ const addProduct = async (req, res) => {
       description,
       price,
       category,
-      woodName,
+      wood,
       length,
       breadth,
       height,
     } = req.body;
+
+    console.log("Request Body:", req.body);
 
     // Ensure req.files exists and handle the images
     const image1 = req.files?.image1?.[0]; // Check if req.files exists and get the first image
@@ -50,7 +53,7 @@ const addProduct = async (req, res) => {
       description,
       category,
       price: Number(price),
-      woodName,
+      wood,
       image: imagesURL,
       length,
       breadth,
@@ -140,19 +143,57 @@ const singleProduct = async (req, res) => {
   }
 };
 
-// List all products
 const listProduct = async (req, res) => {
+  const page = parseInt(req.query.page) || 1; // Default to page 1
+  const limit = req.query.limit ? parseInt(req.query.limit) : 10; // Force limit to 4 per page
   try {
-    const products = await productModel.find().populate("category", "name");
+    // Instantiate ApiFeature
+    const features = new ApiFeature(productModel.find(), req.query)
+      .search() // Apply search filter if keyword is present
+      .pagination(limit); // Apply pagination logic
+
+    const products = await features.query; // Get the products based on query
+    const totalPages = await features.getTotalPages(limit); // Get the total pages dynamically
+
     res.status(200).json({
       success: true,
       message: "Products retrieved successfully",
       products,
+      totalPages,
     });
   } catch (error) {
     res.status(500).json({
       success: false,
       message: "Failed to load products",
+      error: error.message,
+    });
+  }
+};
+
+export const listRelatedProduct = async (req, res) => {
+  try {
+    // Fetch products based on category and wood from query params
+    const products = await productModel.find({
+      ...(req.query.category && { category: req.query.category }), // Filter by category ID if provided
+      ...(req.query.wood && { wood: req.query.wood }), // Filter by wood ID if provided
+    });
+
+    if (products.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No related products found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Related products retrieved successfully",
+      products,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to load related products",
       error: error.message,
     });
   }
@@ -167,7 +208,7 @@ const updateProduct = async (req, res) => {
       description,
       price,
       category,
-      woodName,
+      wood,
       length,
       breadth,
       height,
@@ -201,7 +242,7 @@ const updateProduct = async (req, res) => {
       name,
       description,
       category,
-      woodName,
+      wood,
       image: imagesURL.length > 0 ? imagesURL : undefined,
       length,
       breadth,
