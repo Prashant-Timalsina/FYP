@@ -288,10 +288,34 @@ const ShopContextProvider = (props) => {
 
         const updatedCartData = await Promise.all(
           cartData.map(async (item) => {
-            const productData = await fetchProductData(item.itemId);
-            return productData
-              ? { ...item, product: productData }
-              : { ...item, product: { name: "Unknown Product", price: 0 } };
+            if (item.itemId) {
+              // Regular product fetch
+              const productData = await fetchProductData(item.itemId);
+              return productData
+                ? { ...item, product: productData }
+                : { ...item, product: { name: "Unknown Product", price: 0 } };
+            } else {
+              // Custom product, stored with _id
+              const woodName = item.wood
+                ? await fetchWood(item.wood)
+                : "Unknown Wood";
+              const categoryName = item.category
+                ? await fetchCategory(item.category)
+                : "Unknown Category";
+
+              return {
+                ...item,
+                product: {
+                  name: item.description,
+                  price: item.price,
+                  category: categoryName,
+                  wood: woodName,
+                  // image: { url: item.image?.url || item.image },
+                  image: item.image || { url: item.image?.url },
+                  quantity: item.quantity,
+                },
+              };
+            }
           })
         );
 
