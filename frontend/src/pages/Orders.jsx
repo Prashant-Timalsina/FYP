@@ -84,7 +84,7 @@ const Orders = () => {
                         Dimensions: {item.length}x{item.breadth}x{item.height}{" "}
                         cm
                       </p>
-                      <p className="font-bold text-lg">${order.amount}</p>
+                      <p className="font-bold text-lg">Price: ${item.price}</p>
                     </div>
                     <div className="flex flex-col items-center gap-2">
                       <h2 className="font-bold">Remaining Money</h2>
@@ -96,6 +96,11 @@ const Orders = () => {
                     </div>
                   </div>
                 ))}
+
+                {/* Display the total order amount once */}
+                <div className="text-right font-bold text-lg mt-4">
+                  Total Order Amount: ${order.amount}
+                </div>
               </div>
             ))
           ) : (
