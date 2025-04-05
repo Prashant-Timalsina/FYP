@@ -177,6 +177,7 @@ export const allOrders = async (req, res) => {
     const orders = await orderModel.find().populate("userId", "name email");
     res.status(200).json({ success: true, orders });
   } catch (error) {
+    console.error("Error fetching all orders:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
