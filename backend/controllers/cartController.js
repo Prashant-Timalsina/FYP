@@ -1,6 +1,7 @@
 import userModel from "../models/userModel.js";
 import categoryModel from "../models/categoryModel.js";
 import woodModel from "../models/WoodModel.js";
+import { Types } from "mongoose";
 
 // ADD TO CART
 export const addToCart = async (req, res) => {
@@ -262,21 +263,17 @@ export const customAdd = async (req, res) => {
       categoryData = await categoryModel.findById(category);
       woodData = await woodModel.findById(wood);
     } catch (err) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Invalid category or wood ID format",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid category or wood ID format",
+      });
     }
 
     if (!categoryData || !woodData) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Invalid category or wood selection",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Invalid category or wood selection",
+      });
     }
 
     // Calculate price
@@ -304,7 +301,8 @@ export const customAdd = async (req, res) => {
 
     // Prepare the custom order
     const customOrder = {
-      id: `custom-${Date.now()}`,
+      itemId: new Types.ObjectId(), // Generate a new ObjectId for the custom order
+      type: "custom",
       description,
       category: categoryData._id,
       wood: woodData._id,

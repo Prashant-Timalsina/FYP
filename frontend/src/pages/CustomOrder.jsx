@@ -4,7 +4,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { ShopContext } from "../context/ShopContext";
 
-const AddProduct = () => {
+const CustomProduct = () => {
   const { backendUrl, navigate, token } = useContext(ShopContext);
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
@@ -150,17 +150,17 @@ const AddProduct = () => {
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col w-full items-start gap-3 p-6 bg-white shadow-md rounded-md"
+      className="flex flex-col  w-full items-start gap-3 p-6 bg-white shadow-md rounded-md"
     >
-      <h1 className="text-2xl font-bold mb-4">Add Product</h1>
+      <h1 className="text-2xl font-bold mb-4">Custom Product</h1>
 
       {/* Image Upload */}
       <div>
-        <p className="mb-2">Upload Image(Design Reference only)</p>
-        <div className="flex gap-2">
+        <p className="mb-2">Upload Image (Design Reference only)</p>
+        <div className="flex gap-2 overflow-x-auto whitespace-nowrap">
           <label htmlFor="image1">
             <img
-              className="w-20"
+              className="w-[150px] h-[150px] object-cover"
               src={!image1 ? assets.upload_area : URL.createObjectURL(image1)}
               alt="Upload"
             />
@@ -173,7 +173,7 @@ const AddProduct = () => {
           </label>
           <label htmlFor="image2">
             <img
-              className="w-20"
+              className="w-[150px] h-[150px] object-cover"
               src={!image2 ? assets.upload_area : URL.createObjectURL(image2)}
               alt="Upload"
             />
@@ -186,7 +186,7 @@ const AddProduct = () => {
           </label>
           <label htmlFor="image3">
             <img
-              className="w-20"
+              className="w-[150px] h-[150px] object-cover"
               src={!image3 ? assets.upload_area : URL.createObjectURL(image3)}
               alt="Upload"
             />
@@ -199,7 +199,7 @@ const AddProduct = () => {
           </label>
           <label htmlFor="image4">
             <img
-              className="w-20"
+              className="w-[150px] h-[150px] object-cover"
               src={!image4 ? assets.upload_area : URL.createObjectURL(image4)}
               alt="Upload"
             />
@@ -267,7 +267,7 @@ const AddProduct = () => {
       </div>
 
       {/* Dimensions & Price Calculation */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {[
           ["Length", setLength],
           ["Breadth", setBreadth],
@@ -285,10 +285,17 @@ const AddProduct = () => {
         ))}
       </div>
 
-      <button type="button" onClick={calculatePrice}>
+      <button
+        className="border px-3 py-2 mt-4"
+        type="button"
+        onClick={calculatePrice}
+      >
         Calculate Price
       </button>
-      <span>Price: {price}</span>
+
+      <span className="text-lg font-semibold">
+        Price: <span className="underline font-bold px-3">{price}</span>
+      </span>
 
       <button
         type="submit"
@@ -300,4 +307,4 @@ const AddProduct = () => {
   );
 };
 
-export default AddProduct;
+export default CustomProduct;

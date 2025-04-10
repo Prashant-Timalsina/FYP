@@ -12,6 +12,7 @@ import sendEmail from "./middlewares/NodeMailer.js";
 import orderRouter from "./routes/orderRoutes.js";
 import favRouter from "./routes/favoriteRoutes.js";
 import bodyParser from "body-parser";
+import paymentRouter from "./routes/paymentRoutes.js";
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -24,7 +25,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "http://localhost:5173", // allow Vite frontend
+    credentials: true,
+  })
+);
 
 //Routes
 app.post("/send-email", sendEmail);
@@ -37,6 +43,7 @@ app.use("/api/wood", woodRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/order", orderRouter);
 app.use("/api/fav", favRouter);
+app.use("/api/payment", paymentRouter);
 
 app.get("/", (req, res) => {
   res.send("API working");
