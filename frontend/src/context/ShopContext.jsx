@@ -288,7 +288,7 @@ const ShopContextProvider = (props) => {
 
         const updatedCartData = await Promise.all(
           cartData.map(async (item) => {
-            if (item.itemId) {
+            if (item.type != "custom") {
               // Regular product fetch
               const productData = await fetchProductData(item.itemId);
               return productData
@@ -330,6 +330,7 @@ const ShopContextProvider = (props) => {
 
   const cleanCart = async () => {
     try {
+      console.log(token);
       const token = localStorage.getItem("token");
       if (!token) return;
 

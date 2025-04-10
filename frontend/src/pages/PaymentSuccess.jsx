@@ -1,101 +1,48 @@
-import React, { useContext, useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom"; // Correct import for useSearchParams
-import axios from "axios"; // Make sure axios is imported
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { useEffect, useContext } from "react";
+import axios from "axios";
 import { ShopContext } from "../context/ShopContext";
 
-// Utility function to retrieve orderId from localStorage
-const getValidOrderId = () => {
-  const orderId = localStorage.getItem("orderId");
-  const expiryTime = localStorage.getItem("expiryTime");
-
-  if (!orderId) return null; // No data found
-
-  try {
-    // const { orderId, expiryTime } = JSON.parse(orderData);
-
-    // Check if the orderId has expired
-    if (Date.now() > expiryTime) {
-      console.warn("Stored orderId has expired, removing from localStorage...");
-      localStorage.removeItem("orderData");
-      return null;
-    }
-
-    return orderId;
-  } catch (error) {
-    console.error("Error parsing orderData:", error);
-    localStorage.removeItem("orderData"); // Remove corrupted data
-    return null;
-  }
-};
 const PaymentSuccess = () => {
-  const { backendUrl } = useContext(ShopContext);
-  const [search] = useSearchParams();
-  const dataQuery = search.get("data");
-  const [data, setData] = useState({});
-  const orderId = getValidOrderId();
+  const [params] = useSearchParams();
+  const navigate = useNavigate();
+  const { cleanCart, backendUrl } = useContext(ShopContext);
 
   useEffect(() => {
-    if (dataQuery) {
-      try {
-        const resData = atob(dataQuery);
-        const resObject = JSON.parse(resData);
-        console.log(resObject);
-        setData(resObject);
-      } catch (error) {
-        console.error("Error decoding data:", error);
+    const verify = async () => {
+      const dataQuery = params.get("data");
+
+      if (!dataQuery) {
+        alert("Missing payment data.");
+        navigate("/checkout");
+        return;
       }
-    }
-  }, [dataQuery]); // Using `dataQuery` in the dependency array to trigger on change
 
-  useEffect(() => {
-    if (data) {
-      updateStatus(); // Calling updateStatus when the data is ready
-    }
-  }, [data]); // Trigger the updateStatus when `data` changes
+      try {
+        console.log("dataQuery:", dataQuery);
+        const resObject = JSON.parse(atob(dataQuery));
+        console.log("Decoded object:", resObject);
 
-  const updateStatus = async () => {
-    if (!orderId) {
-      console.error("No valid orderId found.");
-      return;
-    }
+        const res = await axios.post(`${backendUrl}/api/payment/verify`, {
+          refId: resObject.transaction_code,
+          transaction_uuid: resObject.transaction_uuid,
+          amt: resObject.total_amount,
+        });
 
-    const newStatus = data?.status === "COMPLETE" ? "processing" : "pending";
+        cleanCart();
+        alert("✅ Payment successful and verified!");
+        navigate("/orders");
+      } catch (err) {
+        console.error("Payment verification error:", err);
+        alert("❌ Payment verification failed!");
+        navigate("/checkout");
+      }
+    };
 
-    try {
-      const response = await axios.put(
-        `${backendUrl}/api/order/status/${orderId}`,
-        { status: newStatus }
-      );
-      console.log("Order status updated successfully:", response.data);
-    } catch (error) {
-      console.error(
-        "Error updating order status:",
-        error.response?.data || error.message
-      );
-    }
-  };
+    verify();
+  }, [params, navigate, backendUrl, cleanCart]);
 
-  useEffect(() => {
-    updateStatus(); // Calling updateStatus when the data is ready
-  }, [data]); // Trigger the updateStatus when `data` changes
-
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 p-4">
-      <div className="bg-white p-6 rounded-lg shadow-md text-center">
-        <img
-          src="https://freerangestock.com/sample/50976/tick-success-shows-progress-checkmark-and-correct.jpg"
-          alt="Payment success"
-          className="w-24 h-24 mx-auto mb-4"
-        />
-        <p className="text-xl font-semibold mb-2">Payment Successful</p>
-        <p className="text-lg font-bold">Amount Paid:</p>
-        <p className="text-2xl text-green-600">Rs. {data.total_amount}</p>
-      </div>
-      <Link to="/" className="mt-4 text-blue-500 hover:underline">
-        Go to Homepage
-      </Link>
-    </div>
-  );
+  return <p className="text-center mt-10">Verifying payment, please wait...</p>;
 };
 
 export default PaymentSuccess;

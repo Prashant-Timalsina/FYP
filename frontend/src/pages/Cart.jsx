@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { FiTrash } from "react-icons/fi";
 import CartTotal from "../components/CartTotal";
 import Title from "../components/Title";
+import { assets } from "../assets/assets";
 
 const Cart = () => {
   const { cartItems, cartCount, getCart, updateCart, currency } =
@@ -14,6 +15,7 @@ const Cart = () => {
 
   useEffect(() => {
     getCart();
+    console.log("Cart items:", cartItems);
   }, []);
 
   const handleQuantityChange = (item, quantity) => {
@@ -31,7 +33,7 @@ const Cart = () => {
       toast.error("Your cart is empty. Add items to proceed.");
       return;
     }
-    navigate("/place-order");
+    navigate("/checkout");
   };
 
   return (
@@ -57,7 +59,11 @@ const Cart = () => {
                   {/* Product Image */}
                   <div className="w-24 h-24 bg-gray-200 flex items-center justify-center overflow-hidden rounded-lg">
                     <img
-                      src={item.product?.image[0]}
+                      src={
+                        item.product?.image[0] ||
+                        item.product?.image ||
+                        assets.profile
+                      }
                       alt={item.product?.name}
                       className="object-cover w-full h-full"
                     />

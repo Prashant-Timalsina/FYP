@@ -51,7 +51,10 @@ const Profile = () => {
   };
 
   if (loading) return <p>Loading...</p>;
-  if (error) return <p>Error: {error}</p>;
+  if (error) {
+    toast.error(error);
+    return <p>{error}</p>;
+  }
 
   return (
     <div className="p-4">

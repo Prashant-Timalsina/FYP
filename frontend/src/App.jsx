@@ -60,14 +60,14 @@ const App = () => {
               <Route path="/contact" element={<Contact />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/login" element={<Login />} />
-              <Route path="/place-order" element={<PlaceOrder />} />
+              <Route path="/checkout" element={<PlaceOrder />} />
               <Route path="/orders" element={<Orders />} />
               <Route path="/product/:id" element={<Product />} />
               <Route path="/custom-order" element={<CustomOrder />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/payment" element={<Payment />} />
-              <Route path="/success-payment" element={<PaymentSuccess />} />
-              <Route path="/failure-payment" element={<PaymentFailure />} />
+              <Route path="/payment-success" element={<PaymentSuccess />} />
+              <Route path="/payment-failure" element={<PaymentFailure />} />
 
               <Route
                 path="/reset-password/:token"

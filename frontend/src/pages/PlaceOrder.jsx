@@ -111,21 +111,14 @@ const PlaceOrder = () => {
           );
 
           if (onlineResponse.data.success) {
-            const { orderId } = onlineResponse.data;
-            console.log("Order ID:", orderId);
+            console.log("Online Response:", onlineResponse.data);
 
-            storeOrderId(orderId);
-
-            const paymentData = {
-              amount: totalAmount,
-              // orderId,
-              // success_url: `http://localhost:5173/success-payment?orderId=${orderId}`,
-              // failure_url: `http://localhost:5173/failure-payment?orderId=${orderId}`,
-              orderId,
-              success_url: `http://localhost:5173/success-payment`,
-              failure_url: `http://localhost:5173/failure-payment`,
-            };
-            navigate("/payment", { state: paymentData });
+            navigate("/payment", {
+              state: {
+                orderId: onlineResponse.data.orderId,
+                amount: onlineResponse.data.amount,
+              },
+            });
           }
           break;
 
@@ -139,8 +132,8 @@ const PlaceOrder = () => {
           if (partialResponse.data.success) {
             const paymentData = {
               amount: partialPayment,
-              success_url: "http://localhost:5173/success-payment",
-              failure_url: "http://localhost:5173/failure-payment",
+              success_url: "http://localhost:5173/payment-success",
+              failure_url: "http://localhost:5173/payment-failure",
             };
             navigate("/payment", { state: paymentData });
           }
