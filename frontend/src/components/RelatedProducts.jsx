@@ -1,117 +1,105 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useState, useEffect, useContext } from "react";
+import axios from "axios";
+import { toast } from "react-toastify";
 import { ShopContext } from "../context/ShopContext";
-import { Link } from "react-router-dom";
 
-const RelatedProducts = ({ category, wood, currentProductId }) => {
+const RelatedProducts = ({ currentProductId }) => {
   const { backendUrl } = useContext(ShopContext);
   const [relatedProducts, setRelatedProducts] = useState([]);
-
-  const fetchRelatedProducts = async (category, wood, currentProductId) => {
-    try {
-      console.log("🔄 Fetching related products for:", {
-        category,
-        wood,
-        currentProductId,
-      });
-
-      const apiUrl = `${backendUrl}/api/product/related`;
-      const queryParams = { category, wood };
-
-      console.log("🔍 API Request:", apiUrl);
-      console.log("📌 Query Parameters:", queryParams);
-
-      const response = await axios.get(apiUrl, { params: queryParams });
-
-      console.log("✅ API Response:", response.data);
-
-      console.log("✅ API Response Received:", response.data);
-
-      if (response.data.success) {
-        const products = response.data.products;
-        console.log("📦 All Fetched Products:", products);
-
-        // Filter out the current product
-        const filteredProducts = products.filter(
-          (product) => product._id !== currentProductId
-        );
-
-        console.log(
-          "🎯 Filtered Related Products (Excluding Current):",
-          filteredProducts
-        );
-
-        // Shuffle and pick up to 5 products
-        const shuffledProducts = filteredProducts.sort(
-          () => Math.random() - 0.5
-        );
-        const finalProducts = shuffledProducts.slice(0, 5);
-
-        console.log(
-          "🎲 Shuffled and Selected Products (Top 5):",
-          finalProducts
-        );
-
-        return finalProducts;
-      } else {
-        console.error(
-          "❌ Error fetching related products:",
-          response.data.message
-        );
-        toast.error("Failed to fetch related products");
-        return [];
-      }
-    } catch (error) {
-      console.error("❌ Error fetching related products:", error);
-      toast.error("Failed to fetch related products");
-      return [];
-    }
-  };
+  const [category, setCategory] = useState(null);
+  const [wood, setWood] = useState(null);
+  const [allProducts, setAllProducts] = useState([]);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      console.log("🔄 Fetching related products in useEffect...");
+    // Fetch the current product details
+    const fetchCurrentProduct = async () => {
+      try {
+        const response = await axios.get(
+          `${backendUrl}/api/product/single/${currentProductId}`
+        );
+        if (response.data.success) {
+          const currentProduct = response.data.product;
 
-      const products = await fetchRelatedProducts(
-        category,
-        wood,
-        currentProductId
-      );
+          setCategory(currentProduct.category);
+          setWood(currentProduct.wood);
 
-      console.log("✅ Received Related Products from API:", products);
-
-      setRelatedProducts(products);
+          fetchAllProducts();
+        } else {
+          toast.error("Failed to fetch current product data");
+        }
+      } catch (error) {
+        toast.error("Failed to fetch current product");
+        console.error(error);
+      }
     };
 
-    if (category || wood) {
-      fetchProducts();
+    const fetchAllProducts = async () => {
+      try {
+        const response = await axios.get(`${backendUrl}/api/product/list`);
+        if (response.data.success) {
+          setAllProducts(response.data.products);
+        } else {
+          toast.error("Failed to fetch all products");
+        }
+      } catch (error) {
+        toast.error("Failed to fetch all products");
+        console.error(error);
+      }
+    };
+
+    fetchCurrentProduct();
+  }, [currentProductId]);
+
+  useEffect(() => {
+    if (category && wood && allProducts.length > 0) {
+      const filteredProducts = allProducts.filter((product) => {
+        const sameCategory = String(product.category) === String(category);
+        const sameWood = String(product.wood) === String(wood);
+
+        const isNotCurrent = product._id !== currentProductId;
+
+        return isNotCurrent && (sameCategory || sameWood);
+      });
+
+      // Shuffle and select the top 5 products
+      const shuffledProducts = shuffle(filteredProducts).slice(0, 6);
+      setRelatedProducts(shuffledProducts);
     }
-  }, [category, wood, currentProductId, fetchRelatedProducts]);
+  }, [category, wood, allProducts, currentProductId]);
+
+  const shuffle = (array) => {
+    let shuffledArray = [...array];
+    for (let i = shuffledArray.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffledArray[i], shuffledArray[j]] = [
+        shuffledArray[j],
+        shuffledArray[i],
+      ];
+    }
+    return shuffledArray;
+  };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-      {relatedProducts.length > 0 ? (
-        relatedProducts.map((product) => (
-          <Link
-            to={`/product/${product._id}`}
-            key={product._id}
-            className="border p-3 rounded-md hover:shadow-md transition"
-          >
-            <img
-              src={product.image[0]}
-              alt={product.name}
-              className="w-full h-40 object-cover rounded-md"
-            />
-            <h3 className="mt-2 text-sm font-medium">{product.name}</h3>
-            <p className="text-gray-500 text-xs">{product.category}</p>
-            <p className="text-gray-500 text-xs">{product.wood}</p>
-            <p className="text-lg font-bold mt-1">${product.price}</p>
-          </Link>
-        ))
-      ) : (
-        <p className="text-gray-500 text-center col-span-full">
-          No related products found.
-        </p>
-      )}
+    <div className="flex flex-col">
+      <h3 className="text-lg font-semibold mb-4">Related Products</h3>
+      <div className="flex gap-4 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
+        {relatedProducts.map((product) => {
+          return (
+            <div
+              key={product._id}
+              className="min-w-[200px] max-w-[200px] flex-shrink-0 p-4 border rounded-lg shadow hover:shadow-md transition"
+            >
+              <img
+                src={product.image}
+                alt={product.name}
+                className="w-full h-32 object-cover rounded-md"
+              />
+              <h3 className="mt-2 text-sm font-medium">{product.name}</h3>
+              <p className="text-gray-500 text-xs mt-1">${product.price}</p>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 };

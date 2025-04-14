@@ -31,6 +31,8 @@ const orderSchema = new mongoose.Schema(
         breadth: { type: Number, required: true },
         height: { type: Number, required: true },
         image: { type: String },
+        description: { type: String },
+        price: { type: Number },
         quantity: { type: Number, default: 1 },
         // isCustom: { type: Boolean, default: false }, // Flag for custom orders
       },

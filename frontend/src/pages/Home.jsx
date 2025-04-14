@@ -12,7 +12,7 @@ const Home = () => {
         <UserCustom />
         <CategoryDisplay />
         <WoodDisplay />
-        <NewsLetterBox />
+        {/* <NewsLetterBox /> */}
       </main>
     </div>
   );

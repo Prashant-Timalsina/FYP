@@ -107,7 +107,7 @@ const Collection = () => {
   };
 
   useEffect(() => {
-    console.log("Products:", products);
+    // console.log("Products:", products);
     filterAndSortProducts();
   }, [products, selectedCategories, selectedWoods, sortType]);
 
