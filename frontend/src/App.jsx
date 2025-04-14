@@ -23,9 +23,14 @@ import Profile from "./pages/Profile";
 import Payment from "./pages/Payment";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFailure from "./pages/PaymentFailure";
+import Chatbot from "./components/Chatbot";
+
+import { FaCommentDots, FaTimes } from "react-icons/fa"; // Import icons
 
 const App = () => {
   const [loading, setLoading] = useState(true);
+  const [isChatbotOpen, setIsChatbotOpen] = useState(false);
+
   const location = useLocation();
 
   useEffect(() => {
@@ -75,6 +80,20 @@ const App = () => {
               />
               <Route path="/*" element={<Error />} />
             </Routes>
+          </div>
+          <div>
+            <button
+              onClick={() => setIsChatbotOpen((prev) => !prev)}
+              className="fixed bottom-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-full text-xl flex items-center justify-center"
+            >
+              {isChatbotOpen ? <FaTimes /> : <FaCommentDots />}
+            </button>
+
+            {isChatbotOpen && (
+              <div className="fixed bottom-16 right-4">
+                <Chatbot onClose={() => setIsChatbotOpen(false)} />
+              </div>
+            )}
           </div>
           <Footer />
         </>

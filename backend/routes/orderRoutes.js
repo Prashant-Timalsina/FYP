@@ -4,10 +4,12 @@ import adminAuth from "../middlewares/AdminAuth.js";
 
 import {
   allOrders,
+  cancelOrder,
   // cancelOrder,
   createOrder,
   placeOrder,
   placeOrderOnline,
+  updatePaymentStatus,
   // placeOrderESewa,
   updateStatus,
   userOrders,
@@ -18,7 +20,8 @@ const orderRouter = express.Router();
 
 //Admin permissions
 orderRouter.get("/all", adminAuth, allOrders);
-orderRouter.put("/status/:orderId", updateStatus);
+orderRouter.put("/status", updateStatus);
+orderRouter.put("/cancel", adminAuth, cancelOrder);
 
 // user tasks
 orderRouter.put("new-order", authUser, createOrder);
@@ -30,6 +33,6 @@ orderRouter.post("/online", authUser, placeOrderOnline);
 // orderRouter.get("/verify-esewa", verifyESewaPayment);
 
 orderRouter.get("/myorder", authUser, userOrders);
-// orderRouter.post("/cancel", authUser, cancelOrder);
+orderRouter.put("/payment", authUser, updatePaymentStatus);
 
 export default orderRouter;

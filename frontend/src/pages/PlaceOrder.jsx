@@ -16,9 +16,10 @@ const PlaceOrder = () => {
     delivery_fee,
     getTotalPrice,
     partialPayment,
+    fetchProductData,
   } = useContext(ShopContext);
 
-  const [Method, setMethod] = useState("online");
+  const [Method, setMethod] = useState("physical");
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -47,13 +48,17 @@ const PlaceOrder = () => {
     e.preventDefault();
 
     try {
-      // Map through the cartItems and get corresponding product data
-      const orderItems = cartItems
-        .map((item) => {
-          // Assuming product is a single product object
-          const productData = Array.isArray(product)
-            ? product.find((p) => p._id === item.id)
-            : product; // If products is not an array, use it directly
+      console.log("PRODUCTS:", product); // Logs the product state
+      console.log("Cart Items in PlaceOrder Page", cartItems); // Logs the cart items
+
+      const orderItems = await Promise.all(
+        cartItems.map(async (item) => {
+          console.log("Item ID:", item.itemId);
+
+          // Fetch product data for each item in the cart by itemId
+          const productData = await fetchProductData(item.itemId);
+
+          console.log("Product Data:", productData);
 
           if (productData) {
             return {
@@ -72,7 +77,12 @@ const PlaceOrder = () => {
           }
           return null;
         })
-        .filter((item) => item !== null); // Filter out null values if any product was not found
+      );
+
+      // Filter out null values from orderItems
+      const validOrderItems = orderItems.filter((item) => item !== null);
+
+      console.log("Order Items after mapping:", validOrderItems);
 
       const totalAmount = getTotalPrice() + delivery_fee;
       if (isNaN(totalAmount) || totalAmount <= 0) {
@@ -95,10 +105,10 @@ const PlaceOrder = () => {
             orderData,
             { headers: { Authorization: `Bearer ${token}` } }
           );
-          console.log("Token being sent:", token);
+          // console.log("Token being sent:", token);
 
           if (physicalResponse.data.success) {
-            setCartItems([]);
+            // setCartItems([]);
             navigate("/orders");
           }
           break;
