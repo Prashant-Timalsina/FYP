@@ -78,6 +78,7 @@ const App = () => {
                 path="/reset-password/:token"
                 element={<ResetPassword />}
               />
+
               <Route path="/*" element={<Error />} />
             </Routes>
           </div>

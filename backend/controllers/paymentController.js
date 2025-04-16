@@ -11,9 +11,13 @@ const MERCHANT_CODE = "EPAYTEST";
 
 export const initiatePayment = async (req, res) => {
   try {
-    // console.log("Initiate Payment Request:", req.body);
-
     const { orderId, amount } = req.body;
+
+    if (!orderId || !amount) {
+      return res
+        .status(400)
+        .json({ message: "Order ID and amount are required" });
+    }
 
     const transaction_uuid = uuidv4();
 
@@ -37,11 +41,10 @@ export const initiatePayment = async (req, res) => {
       failure_url: "http://localhost:5173/payment-failure",
     });
   } catch (err) {
-    res.status(500).json({
-      message: "Payment initiation failed",
-      error: err,
-      stack: err.stack,
-    });
+    console.error("Error initiating payment:", err);
+    res
+      .status(500)
+      .json({ message: "Payment initiation failed", error: err.message });
   }
 };
 
@@ -49,20 +52,13 @@ export const verifyPayment = async (req, res) => {
   const { refId, transaction_uuid, amt } = req.body;
 
   try {
-    console.log("Looking for transaction_uuid:", transaction_uuid);
-
     const payment = await Payment.findOne({ transaction_uuid });
-    if (!payment) return res.status(404).json({ message: "Payment not found" });
-
-    console.log("Payment verification request:", {
-      amt,
-      pid: transaction_uuid,
-      rid: refId,
-      scd: MERCHANT_CODE,
-    });
+    if (!payment) {
+      return res.status(404).json({ message: "Payment not found" });
+    }
 
     const verifyRes = await axios.post(
-      "https://rc-epay.esewa.com.np/api/epay/verify/",
+      "https://rc.esewa.com.np/api/epay/transaction/status",
       qs.stringify({
         amt,
         pid: transaction_uuid,
@@ -76,26 +72,25 @@ export const verifyPayment = async (req, res) => {
       }
     );
 
-    console.log("eSewa verification response:", verifyRes.data);
-
-    if (verifyRes.data.status === "Success") {
+    if (verifyRes.data.includes("<response_code>Success</response_code>")) {
       payment.status = "PAID";
       payment.refId = refId;
       await payment.save();
 
       await Order.findByIdAndUpdate(payment.orderId, { status: "PAID" });
 
-      res.status(200).json({ message: "Payment verified and order updated" });
+      return res
+        .status(200)
+        .json({ message: "Payment verified and order updated" });
     } else {
       payment.status = "FAILED";
       await payment.save();
-      res.status(400).json({ message: "Payment verification failed" });
+      return res.status(400).json({ message: "Payment verification failed" });
     }
   } catch (err) {
-    res.status(500).json({
-      message: "Payment verification error",
-      error: err,
-      stack: err.stack,
-    });
+    console.error("Error verifying payment:", err);
+    res
+      .status(500)
+      .json({ message: "Payment verification error", error: err.message });
   }
 };
