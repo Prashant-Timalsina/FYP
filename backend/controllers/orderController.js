@@ -146,8 +146,30 @@ TimberCraft Team
 // Admin: Fetch all orders
 export const allOrders = async (req, res) => {
   try {
-    const orders = await orderModel.find().populate("userId", "name email");
-    res.status(200).json({ success: true, orders });
+    const { page = 1, limit = 10, status, paymentStatus } = req.query;
+    const skip = (page - 1) * limit;
+
+    // Build filter object
+    const filter = {};
+    if (status) filter.status = status;
+    if (paymentStatus) filter.paymentStatus = paymentStatus;
+
+    const orders = await orderModel
+      .find(filter)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
+      .populate("userId", "name email");
+
+    const totalOrders = await orderModel.countDocuments(filter);
+
+    res.status(200).json({
+      success: true,
+      orders,
+      totalOrders,
+      currentPage: Number(page),
+      totalPages: Math.ceil(totalOrders / limit),
+    });
   } catch (error) {
     console.error("Error fetching all orders:", error);
     res.status(500).json({ success: false, message: error.message });

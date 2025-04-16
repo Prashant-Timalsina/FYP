@@ -16,6 +16,8 @@ const Payment = () => {
     }
   }, [orderId, amount, navigate]);
 
+  const FullPayment = formData.amount;
+
   // Step 1: Initiate payment
   useEffect(() => {
     const initiatePayment = async () => {
@@ -28,6 +30,7 @@ const Payment = () => {
         );
 
         console.log("Payment initiation response:", res.data);
+
         if (res.data.error) {
           throw new Error(res.data.error);
         }
@@ -87,7 +90,7 @@ const Payment = () => {
         <label className="text-sm text-gray-600">Amount</label>
         <input
           type="text"
-          value={formData.amount}
+          value={FullPayment}
           readOnly
           className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
         />

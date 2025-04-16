@@ -9,6 +9,7 @@ import {
   requestPasswordReset,
   resetPassword,
   userData,
+  verifyEmail,
 } from "../controllers/userController.js"; // Import the user controller
 import authUser from "../middlewares/UserAuth.js";
 import adminAuth from "../middlewares/AdminAuth.js";
@@ -18,6 +19,7 @@ const userRouter = express.Router();
 // User Routes
 userRouter.post("/register", createUser);
 userRouter.post("/login", loginUser);
+userRouter.post("/verify-email", verifyEmail);
 
 //Route for admin Login
 userRouter.post("/admin", adminLogin);

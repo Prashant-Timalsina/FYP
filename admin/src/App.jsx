@@ -17,6 +17,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { AdminContext } from "./context/AdminContext";
 import UserList from "./pages/UserList";
 import UpdateWood from "./pages/UpdateWood";
+import ChatBox from "./pages/ChatBox";
 
 export const currency = "$";
 
@@ -37,11 +38,7 @@ const App = () => {
       <hr />
       <div className="flex">
         {!isLoginPage && <Sidebar />}
-        <div
-          className={`w-[70%] mx-auto ml-[max(5vw,25px)] my-8 text-gray-600 text-base ${
-            !isLoginPage ? "" : "w-full"
-          }`}
-        >
+        <div>
           <Routes>
             <Route path="/" element={<Login />} />
 
@@ -58,6 +55,7 @@ const App = () => {
               <Route path="/listuser" element={<UserList />} />
               <Route path="/orders" element={<Orders />} />
               <Route path="/product/:id" element={<Product />} />
+              <Route path="/chatbox" element={<ChatBox />} />
             </Route>
           </Routes>
         </div>
