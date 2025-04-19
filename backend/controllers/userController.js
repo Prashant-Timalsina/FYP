@@ -5,31 +5,42 @@ import validator from "validator";
 import sendEmail from "../utils/emailService.js"; // Adjust path if needed
 import crypto from "crypto";
 
-const createToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "15h" });
+const createToken = (id, role) => {
+  return jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: "15h" });
 };
 
 const passwordValidation = /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]+$/;
 
-// CREATE: Create a new user
 export const createUser = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // Ensure req.files exists and handle the image
-    const image = req.files?.image?.[0]; // Check if req.files exists and get the image
-
-    // Upload the image to Cloudinary
-    let imageURL = null;
-    if (image) {
-      const result = await cloudinary.uploader.upload(image.path, {
-        resource_type: "image",
-      });
-      imageURL = result.secure_url;
+    // Validate inputs
+    if (!name || !email || !password) {
+      return res
+        .status(400)
+        .json({ success: false, message: "All fields are required" });
     }
 
-    // // Log the received input data
-    // console.log("Received data:", { name, email, password });
+    if (!validator.isEmail(email)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Enter a valid email address" });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must be at least 6 characters long",
+      });
+    }
+
+    if (!password.match(passwordValidation)) {
+      return res.status(400).json({
+        success: false,
+        message: "Password must contain an uppercase letter and a number",
+      });
+    }
 
     // Check if user already exists
     const existingUser = await userModel.findOne({ email });
@@ -39,64 +50,77 @@ export const createUser = async (req, res) => {
         .json({ success: false, message: "User already exists" });
     }
 
-    // Validate input data
-    if (!name || !email || !password) {
-      return res
-        .status(400)
-        .json({ success: false, message: "All fields are required" });
-    }
-
-    // Validate email format
-    if (!validator.isEmail(email)) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Enter a valid email" });
-    }
-
-    // Validate Passord length should be more then 6 characters
-    if (password.length < 6) {
-      return res.status(400).json({
-        success: false,
-        message: "Password length must be greater then 6",
-      });
-    }
-
-    //Validate with regex
-    if (!password.match(passwordValidation)) {
-      return res.status(400).json({
-        success: false,
-        message: `Password must contain at least one uppercase letter and one number.
-          Pasword must be at least 6 characters long`,
-      });
-    }
-
-    // Hash the password
+    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create new user
+    // Generate email verification token
+    const token = jwt.sign(
+      { name, email, password: hashedPassword },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+
+    // Email verification link
+    const verificationLink = `${process.env.FRONTEND_URL}/verify-email?token=${token}`;
+
+    // Send verification email
+    console.log(email, verificationLink); // Debugging line
+
+    const subject = "Verify your email to complete registration";
+    const message = `Hello ${name},
+Please click the link below to verify your email and complete your registration:
+      ${verificationLink}
+This link will expire in 1 hour.`;
+    await sendEmail(email, subject, message);
+
+    return res.status(200).json({
+      success: true,
+      message: "Verification email sent. Please check your inbox.",
+    });
+  } catch (error) {
+    console.error("Error in createUser:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+export const verifyUser = async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token)
+      return res.status(400).json({ message: "Verification token missing" });
+
+    // Verify token and extract data
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const { name, email, password } = decoded;
+
+    // Check if user already exists (just in case)
+    const existingUser = await userModel.findOne({ email });
+    if (existingUser) {
+      return res.status(409).json({ message: "User already verified" });
+    }
+
     const newUser = new userModel({
       name,
       email,
-      avatar: imageURL,
-      password: hashedPassword,
+      password,
     });
 
-    // Save user to the database
-    const user = await newUser.save();
+    await newUser.save();
 
-    // Generate token for the user
-    const token = createToken(user._id);
+    // Generate final login token
+    const finalToken = createToken(newUser._id, newUser.role);
 
-    // Respond with success and the token
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
-      message: "Account Created Successfully",
-      token,
+      message: "Account verified and created successfully",
+      token: finalToken,
     });
   } catch (error) {
-    console.error("Error creating user:", error);
-    return res.status(500).json({ message: "Server error" });
+    console.error("Error in verifyUser:", error);
+    return res.status(400).json({ message: "Invalid or expired token" });
   }
 };
 
@@ -124,7 +148,7 @@ export const loginUser = async (req, res) => {
   // Compare the provided password with the stored hashed password
   const isMatch = await bcrypt.compare(password, user.password);
   if (isMatch) {
-    const token = createToken(user._id);
+    const token = createToken(user._id, user.role); // Include id and role
     return res.status(200).json({
       success: true,
       message: "Logged in",

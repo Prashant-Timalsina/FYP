@@ -1,3 +1,6 @@
+import Chat from "../models/chatModel.js";
+import userModel from "../models/userModel.js";
+
 // Enhanced responses with more keywords and categories
 const responses = {
   greetings: {
@@ -77,4 +80,97 @@ export const handleChat = (req, res) => {
   }
 
   res.json({ response });
+};
+
+// Get all chats for admin
+export const getAllChats = async (req, res) => {
+  try {
+    const chats = await Chat.find()
+      .sort({ lastMessage: -1 })
+      .select("userId userEmail lastMessage isRead");
+    res.status(200).json({ success: true, chats });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Get chat messages for a specific user
+export const getChatMessages = async (req, res) => {
+  try {
+    console.log(
+      "Requesting chat messages for userId:",
+      req.params.userId || req.user.id
+    );
+
+    const userId = req.user.id || req.params.userId; // Ensure userId is being passed correctly
+    console.log("Fetching chat for userId:", userId);
+
+    const chat = await Chat.findOne({ userId });
+    console.log("Chat found:", chat);
+
+    if (!chat) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Chat not found" });
+    }
+
+    // Mark messages as read if admin is viewing
+    if (req.user.role === "admin") {
+      chat.isRead = true;
+      await chat.save();
+    }
+
+    res.status(200).json({ success: true, messages: chat.messages });
+  } catch (error) {
+    console.error("Error in getChatMessages:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// Send a message
+export const sendMessage = async (req, res) => {
+  try {
+    const { userId, content } = req.body;
+    console.log(req.user.role);
+
+    const sender = req.user.role === "user" ? "user" : "admin";
+
+    let chat = await Chat.findOne({ userId });
+
+    if (!chat) {
+      const user = await userModel.findById(userId);
+      if (!user) {
+        return res
+          .status(404)
+          .json({ success: false, message: "User not found" });
+      }
+
+      chat = new Chat({
+        userId,
+        userEmail: user.email,
+        messages: [],
+      });
+    }
+
+    const message = {
+      sender,
+      content,
+      timestamp: new Date(),
+    };
+
+    chat.messages.push(message);
+    chat.lastMessage = new Date();
+    chat.isRead = sender === "admin"; // Mark as read if admin sends the message
+
+    await chat.save();
+
+    // Emit the message to WebSocket clients
+    req.app.get("io").emit(`chat:${userId}`, message);
+
+    res
+      .status(200)
+      .json({ success: true, message: "Message sent successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
 };

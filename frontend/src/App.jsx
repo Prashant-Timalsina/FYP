@@ -26,6 +26,7 @@ import PaymentFailure from "./pages/PaymentFailure";
 import Chatbot from "./components/Chatbot";
 
 import { FaCommentDots, FaTimes } from "react-icons/fa"; // Import icons
+import VerifyEmailPage from "./pages/VerifyEmailPage";
 
 const App = () => {
   const [loading, setLoading] = useState(true);
@@ -63,13 +64,17 @@ const App = () => {
               <Route path="/collection" element={<Collection />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
-              <Route path="/cart" element={<Cart />} />
+
               <Route path="/login" element={<Login />} />
+              <Route path="/verify-email" element={<VerifyEmailPage />} />
+
+              <Route path="/cart" element={<Cart />} />
               <Route path="/checkout" element={<PlaceOrder />} />
               <Route path="/orders" element={<Orders />} />
               <Route path="/product/:id" element={<Product />} />
               <Route path="/custom-order" element={<CustomOrder />} />
               <Route path="/profile" element={<Profile />} />
+
               <Route path="/payment" element={<Payment />} />
               <Route path="/payment-success" element={<PaymentSuccess />} />
               <Route path="/payment-failure" element={<PaymentFailure />} />

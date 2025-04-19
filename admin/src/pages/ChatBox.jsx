@@ -1,10 +1,10 @@
 import React from "react";
+import AdminChat from "../components/AdminChat";
 
 const ChatBox = () => {
   return (
     <div className="flex flex-row ">
-      <div className="">ChatList</div>
-      <div>Chat with customer</div>
+      <AdminChat />
     </div>
   );
 };

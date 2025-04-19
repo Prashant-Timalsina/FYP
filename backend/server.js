@@ -15,6 +15,9 @@ import bodyParser from "body-parser";
 import paymentRouter from "./routes/paymentRoutes.js";
 import chatRouter from "./routes/chatRoutes.js";
 
+import http from "http"; // Import HTTP module
+import { Server } from "socket.io"; // Import Socket.IO
+
 const app = express();
 const port = process.env.PORT || 4000;
 
@@ -47,4 +50,28 @@ app.get("/", (req, res) => {
   res.send("API working");
 });
 
-app.listen(port, () => console.log("Server Started on port: " + port));
+// app.listen(port, () => console.log("Server Started on port: " + port));
+
+// Create HTTP server and initialize Socket.IO
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*", // Allow all origins (adjust for production)
+    methods: ["GET", "POST"],
+  },
+});
+
+// Attach Socket.IO instance to the app
+app.set("io", io);
+
+// Handle WebSocket connections
+io.on("connection", (socket) => {
+  console.log("A user connected:", socket.id);
+
+  socket.on("disconnect", () => {
+    console.log("A user disconnected:", socket.id);
+  });
+});
+
+// Start the server
+server.listen(port, () => console.log("Server Started on port: " + port));

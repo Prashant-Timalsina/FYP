@@ -40,9 +40,10 @@ const Login = () => {
           password,
         });
         if (response.data.success) {
-          setToken(response.data.token);
-          localStorage.setItem("token", response.data.token);
-          toast.success("Account created successfully!");
+          toast.success(
+            "Account created successfully! Please verify your email."
+          );
+          setCurrentState("Login"); // Redirect to login after successful registration
         } else {
           toast.error(
             response.data.message || "An error occurred. Please try again."
