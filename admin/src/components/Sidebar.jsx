@@ -17,7 +17,9 @@ const Sidebar = () => {
         <NavLink
           className={({ isActive }) =>
             `flex items-center gap-3 border border-gray-300 border-r-0 px-3 py-2 rounded-l transition-colors duration-200 ${
-              isActive ? "bg-amber-100 text-amber-900 font-medium" : "hover:bg-gray-100"
+              isActive
+                ? "bg-amber-100 text-amber-900 font-medium"
+                : "hover:bg-gray-100"
             }`
           }
           to="/home"
@@ -30,7 +32,9 @@ const Sidebar = () => {
         <NavLink
           className={({ isActive }) =>
             `flex items-center gap-3 border border-gray-300 border-r-0 px-3 py-2 rounded-l transition-colors duration-200 ${
-              isActive ? "bg-amber-100 text-amber-900 font-medium" : "hover:bg-gray-100"
+              isActive
+                ? "bg-amber-100 text-amber-900 font-medium"
+                : "hover:bg-gray-100"
             }`
           }
           to="/add"
@@ -43,7 +47,9 @@ const Sidebar = () => {
         <NavLink
           className={({ isActive }) =>
             `flex items-center gap-3 border border-gray-300 border-r-0 px-3 py-2 rounded-l transition-colors duration-200 ${
-              isActive ? "bg-amber-100 text-amber-900 font-medium" : "hover:bg-gray-100"
+              isActive
+                ? "bg-amber-100 text-amber-900 font-medium"
+                : "hover:bg-gray-100"
             }`
           }
           to="/list"
@@ -56,7 +62,9 @@ const Sidebar = () => {
         <NavLink
           className={({ isActive }) =>
             `flex items-center gap-3 border border-gray-300 border-r-0 px-3 py-2 rounded-l transition-colors duration-200 ${
-              isActive ? "bg-amber-100 text-amber-900 font-medium" : "hover:bg-gray-100"
+              isActive
+                ? "bg-amber-100 text-amber-900 font-medium"
+                : "hover:bg-gray-100"
             }`
           }
           to="/listuser"
@@ -69,7 +77,9 @@ const Sidebar = () => {
         <NavLink
           className={({ isActive }) =>
             `flex items-center gap-3 border border-gray-300 border-r-0 px-3 py-2 rounded-l transition-colors duration-200 ${
-              isActive ? "bg-amber-100 text-amber-900 font-medium" : "hover:bg-gray-100"
+              isActive
+                ? "bg-amber-100 text-amber-900 font-medium"
+                : "hover:bg-gray-100"
             }`
           }
           to="/chatbox"
@@ -82,7 +92,9 @@ const Sidebar = () => {
         <NavLink
           className={({ isActive }) =>
             `flex items-center gap-3 border border-gray-300 border-r-0 px-3 py-2 rounded-l transition-colors duration-200 ${
-              isActive ? "bg-amber-100 text-amber-900 font-medium" : "hover:bg-gray-100"
+              isActive
+                ? "bg-amber-100 text-amber-900 font-medium"
+                : "hover:bg-gray-100"
             }`
           }
           to="/orders"

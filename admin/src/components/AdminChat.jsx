@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { useContext } from "react";
+import { AdminContext } from "../context/AdminContext";
 
 const AdminChat = () => {
   const [chats, setChats] = useState([]);
@@ -12,19 +14,18 @@ const AdminChat = () => {
   const messagesEndRef = useRef(null);
   const socket = useRef();
 
+  const { backendUrl } = useContext(AdminContext);
+
   useEffect(() => {
-    socket.current = io(import.meta.env.VITE_BACKEND_URL);
+    socket.current = io(backendUrl);
 
     const fetchChats = async () => {
       try {
-        const response = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/api/chat/admin/chats`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
+        const response = await axios.get(`${backendUrl}/api/chat/admin/chats`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
         if (response.data.success) {
           setChats(response.data.chats);
         }
@@ -45,9 +46,7 @@ const AdminChat = () => {
       const fetchMessages = async () => {
         try {
           const response = await axios.get(
-            `${import.meta.env.VITE_BACKEND_URL}/api/chat/admin/chats/${
-              selectedChat.userId
-            }`,
+            `${backendUrl}/api/chat/admin/chats/${selectedChat.userId}`,
             {
               headers: {
                 Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -82,7 +81,7 @@ const AdminChat = () => {
 
     try {
       await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/chat/admin/send`,
+        `${backendUrl}/api/chat/admin/send`,
         {
           userId: selectedChat.userId,
           content: newMessage,
@@ -101,13 +100,13 @@ const AdminChat = () => {
   };
 
   return (
-    <div className="flex h-full w-full bg-gray-100 overflow-hidden">
+    <div className="flex h-screen w-full bg-gray-100 overflow-hidden">
       {/* Chat List */}
-      <div className="w-1/3 max-w-sm bg-white border-r shadow-sm">
+      <div className="w-1/3 max-w-sm bg-white border-r shadow-sm h-full flex flex-col">
         <div className="p-4 border-b">
           <h2 className="text-xl font-semibold">Chats</h2>
         </div>
-        <div className="overflow-y-auto h-[calc(100vh-4rem)]">
+        <div className="overflow-y-auto flex-1">
           {chats.map((chat) => (
             <div
               key={chat.userId}

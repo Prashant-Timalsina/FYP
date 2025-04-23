@@ -106,7 +106,7 @@ export const getChatMessages = async (req, res) => {
     console.log("Fetching chat for userId:", userId);
 
     const chat = await Chat.findOne({ userId });
-    console.log("Chat found:", chat);
+    // console.log("Chat found:", chat);,
 
     if (!chat) {
       return res

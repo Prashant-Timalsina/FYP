@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import { io } from "socket.io-client";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { ShopContext } from "../context/ShopContext";
 
 const ChatWithSeller = () => {
   const [messages, setMessages] = useState([]);
@@ -9,16 +10,20 @@ const ChatWithSeller = () => {
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
   const socket = useRef();
+  const { token, backendUrl } = useContext(ShopContext);
+
+  // 🔥 Parse userId once and reuse
+  const userId = JSON.parse(atob(token.split(".")[1])).id;
 
   useEffect(() => {
     // Initialize socket connection
-    socket.current = io(import.meta.env.VITE_BACKEND_URL);
+    socket.current = io(backendUrl);
 
     // Fetch existing messages
     const fetchMessages = async () => {
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/api/chat/user/messages`,
+          `${backendUrl}/api/chat/user/messages`,
           {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -39,7 +44,6 @@ const ChatWithSeller = () => {
     fetchMessages();
 
     // Listen for new messages
-    const userId = JSON.parse(localStorage.getItem("user"))._id;
     socket.current.on(`chat:${userId}`, (message) => {
       setMessages((prev) => [...prev, message]);
     });
@@ -50,7 +54,10 @@ const ChatWithSeller = () => {
   }, []);
 
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    messagesEndRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+    });
   }, [messages]);
 
   const handleSendMessage = async (e) => {
@@ -58,9 +65,8 @@ const ChatWithSeller = () => {
     if (!newMessage.trim()) return;
 
     try {
-      const userId = JSON.parse(localStorage.getItem("user"))._id;
       await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/chat/user/send`,
+        `${backendUrl}/api/chat/user/send`,
         {
           userId,
           content: newMessage,
@@ -87,7 +93,7 @@ const ChatWithSeller = () => {
   }
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-gray-100">
+    <div className="w-full flex flex-col bg-gray-100 h-[500px] rounded-lg shadow-lg">
       {/* Header */}
       <div className="bg-white shadow-sm">
         <div className="max-w-7xl mx-auto px-4 py-4">
@@ -100,7 +106,10 @@ const ChatWithSeller = () => {
         <div className="h-full max-w-7xl mx-auto px-4 py-4">
           <div className="h-full bg-white rounded-lg shadow-sm overflow-hidden flex flex-col">
             {/* Messages Container */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div
+              className="flex-1 overflow-y-auto p-4 space-y-4 max-h-[400px]"
+              id="chat-messages"
+            >
               {messages.map((message, index) => (
                 <div
                   key={index}
