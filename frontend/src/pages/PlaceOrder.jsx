@@ -19,7 +19,7 @@ const PlaceOrder = () => {
     fetchProductData,
   } = useContext(ShopContext);
 
-  const [Method, setMethod] = useState("physical");
+  const [Method, setMethod] = useState("online");
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -121,14 +121,15 @@ const PlaceOrder = () => {
           );
 
           if (onlineResponse.data.success) {
-            console.log("Online Response:", onlineResponse.data);
+            console.log("Online payment response:", onlineResponse.data);
 
-            navigate("/payment", {
-              state: {
-                orderId: onlineResponse.data.orderId,
-                amount: onlineResponse.data.amount,
-              },
-            });
+            const paymentData = {
+              amount: totalAmount,
+              orderId: onlineResponse.data.orderId,
+              success_url: "http://localhost:5173/payment-success",
+              failure_url: "http://localhost:5173/payment-failure",
+            };
+            navigate("/payment", { state: paymentData });
           }
           break;
 

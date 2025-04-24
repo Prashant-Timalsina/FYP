@@ -1,48 +1,37 @@
-import { useSearchParams, useNavigate } from "react-router-dom";
-import { useEffect, useContext } from "react";
-import axios from "axios";
-import { ShopContext } from "../context/ShopContext";
+import React, { useEffect, useState } from "react";
+import { useSearchParams } from "react-router";
 
 const PaymentSuccess = () => {
-  const [params] = useSearchParams();
-  const navigate = useNavigate();
-  const { cleanCart, backendUrl } = useContext(ShopContext);
+  const [search] = useSearchParams();
+  const dataQuery = search.get("data");
+  const [data, setData] = useState({});
 
   useEffect(() => {
-    const verify = async () => {
-      const dataQuery = params.get("data");
+    const resData = atob(dataQuery);
+    const resObject = JSON.parse(resData);
+    console.log(resObject);
 
-      if (!dataQuery) {
-        alert("Missing payment data.");
-        navigate("/checkout");
-        return;
-      }
+    // Extract orderId from transaction_uuid
+    const transactionUuid = resObject.transaction_uuid;
+    const orderId = transactionUuid.slice(36); // UUID is 36 characters long
 
-      try {
-        console.log("dataQuery:", dataQuery);
-        const resObject = JSON.parse(atob(dataQuery));
-        console.log("Decoded object:", resObject);
+    setData({
+      ...resObject,
+      orderId, // Add extracted orderId to the state
+    });
+  }, [search]);
 
-        const res = await axios.post(`${backendUrl}/api/payment/verify`, {
-          refId: resObject.transaction_code,
-          transaction_uuid: resObject.transaction_uuid,
-          amt: resObject.total_amount,
-        });
-
-        cleanCart();
-        alert("✅ Payment successful and verified!");
-        navigate("/orders");
-      } catch (err) {
-        console.error("Payment verification error:", err);
-        alert("❌ Payment verification failed!");
-        navigate("/checkout");
-      }
-    };
-
-    verify();
-  }, [params, navigate, backendUrl, cleanCart]);
-
-  return <p className="text-center mt-10">Verifying payment, please wait...</p>;
+  return (
+    <div className="payment-container">
+      <img src="src/check.png" alt="" />
+      <p className="price">Rs. {data.total_amount}</p>
+      <p className="status">Payment Successful</p>
+      {/* Display the extracted orderId */}
+      <p>
+        <strong>Order ID:</strong> {data.orderId}
+      </p>
+    </div>
+  );
 };
 
 export default PaymentSuccess;

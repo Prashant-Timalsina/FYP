@@ -1,69 +1,57 @@
-import React, { useEffect, useState, useContext } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { v4 as uuidv4 } from "uuid";
+import CryptoJS from "crypto-js";
 
 const Payment = () => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const { orderId, amount } = location.state || {}; // fallback safety
+  const { amount, orderId } = location.state || {};
 
-  const [formData, setFormData] = useState(null);
+  // Add signed fields
+  const signedFields = "total_amount,transaction_uuid,product_code";
 
-  // Redirect to checkout if required data is missing
+  const [formData, setFormData] = useState({
+    amount: amount || "",
+    tax_amount: "0",
+    total_amount: amount || "",
+    transaction_uuid: "", // We'll set this dynamically later
+    product_service_charge: "0",
+    product_delivery_charge: "0",
+    product_code: "EPAYTEST",
+    success_url: "http://localhost:5173/payment-success",
+    failure_url: "http://localhost:5173/payment-failure",
+    signed_field_names: signedFields,
+    signature: "",
+    secret: "8gBm/:&EnhH.1/q",
+  });
+
+  const generateSignature = (data) => {
+    const { total_amount, transaction_uuid, product_code, secret } = data;
+    const hashString = `total_amount=${total_amount},transaction_uuid=${transaction_uuid},product_code=${product_code}`;
+    const hash = CryptoJS.HmacSHA256(hashString, secret);
+    return CryptoJS.enc.Base64.stringify(hash);
+  };
+
   useEffect(() => {
-    if (!orderId || !amount) {
-      navigate("/checkout");
-    }
-  }, [orderId, amount, navigate]);
+    if (!amount || !orderId) return;
 
-  const FullPayment = formData.amount;
+    // Combine uuidv4() with orderId to generate transaction_uuid
+    const transactionUuid = uuidv4() + orderId;
 
-  // Step 1: Initiate payment
-  useEffect(() => {
-    const initiatePayment = async () => {
-      console.log("Initiating payment with:", { orderId, amount });
-
-      try {
-        const res = await axios.post(
-          "http://localhost:4000/api/payment/initiate",
-          { orderId, amount }
-        );
-
-        console.log("Payment initiation response:", res.data);
-
-        if (res.data.error) {
-          throw new Error(res.data.error);
-        }
-
-        setFormData({
-          amount: amount.toString(),
-          tax_amount: "0",
-          total_amount: amount.toString(),
-          transaction_uuid: res.data.transaction_uuid,
-          product_service_charge: "0",
-          product_delivery_charge: "0",
-          product_code: "EPAYTEST",
-          success_url: res.data.success_url,
-          failure_url: res.data.failure_url,
-          signed_field_names: "total_amount,transaction_uuid,product_code",
-          signature: res.data.signature,
-        });
-      } catch (err) {
-        console.error(
-          "Payment initiation error",
-          err?.response?.data || err.message
-        );
-        alert("Payment initiation failed");
-        navigate("/checkout");
-      }
+    const updatedFormData = {
+      ...formData,
+      amount,
+      total_amount: amount,
+      transaction_uuid: transactionUuid,
     };
 
-    initiatePayment();
-  }, [amount, orderId, navigate]);
+    const signature = generateSignature(updatedFormData);
 
-  if (!formData) {
-    return <p className="text-center mt-10">Loading payment form...</p>;
-  }
+    setFormData({
+      ...updatedFormData,
+      signature,
+    });
+  }, [amount, orderId]);
 
   return (
     <form
@@ -75,31 +63,42 @@ const Payment = () => {
         Confirm Your Payment
       </h1>
 
-      {/* Summary */}
       <div className="bg-gray-100 p-3 rounded-md text-sm text-gray-700">
         <p>
           <strong>Order ID:</strong> {orderId}
         </p>
         <p>
-          <strong>Amount:</strong> Rs. {amount}
+          <strong>Amount:</strong> Rs. {formData.total_amount}
         </p>
       </div>
 
-      {/* Displayed Amount */}
-      <div>
-        <label className="text-sm text-gray-600">Amount</label>
-        <input
-          type="text"
-          value={FullPayment}
-          readOnly
-          className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-100"
-        />
-      </div>
-
-      {/* Hidden Fields */}
-      {Object.entries(formData).map(([key, value]) => (
-        <input key={key} type="hidden" name={key} value={value} />
-      ))}
+      <input type="hidden" name="amount" value={formData.amount} />
+      <input type="hidden" name="tax_amount" value={formData.tax_amount} />
+      <input type="hidden" name="total_amount" value={formData.total_amount} />
+      <input
+        type="hidden"
+        name="transaction_uuid"
+        value={formData.transaction_uuid}
+      />
+      <input type="hidden" name="product_code" value={formData.product_code} />
+      <input
+        type="hidden"
+        name="product_service_charge"
+        value={formData.product_service_charge}
+      />
+      <input
+        type="hidden"
+        name="product_delivery_charge"
+        value={formData.product_delivery_charge}
+      />
+      <input type="hidden" name="success_url" value={formData.success_url} />
+      <input type="hidden" name="failure_url" value={formData.failure_url} />
+      <input
+        type="hidden"
+        name="signed_field_names"
+        value={formData.signed_field_names}
+      />
+      <input type="hidden" name="signature" value={formData.signature} />
 
       <button
         type="submit"
