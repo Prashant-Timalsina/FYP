@@ -38,17 +38,19 @@ const CategoryDisplay = () => {
   const selectedCategoryData = categories[selectedCategoryIndex];
 
   return (
-    <div className="border-1 border-slate-400 p-4">
-      <p className="text-center text-2xl font-bold">SELECT CATEGORY</p>
-      <div className="flex flex-wrap gap-4 items-center justify-center pb-4">
+    <div className="bg-white rounded-lg shadow-lg p-8">
+      <p className="text-center text-3xl font-bold mb-8 text-yellow-800">
+        EXPLORE CATEGORIES
+      </p>
+      <div className="flex flex-wrap gap-4 items-center justify-center pb-8">
         {categories.map((category, index) => (
           <p
             key={category._id}
             onClick={() => handleCategoryClick(index)}
-            className={`border-2 border-black px-4 py-1 rounded cursor-pointer ${
+            className={`border-2 border-yellow-800 px-6 py-2 rounded-full cursor-pointer transition-all duration-300 ${
               selectedCategoryIndex === index
-                ? "text-xl font-bold underline"
-                : "hover:text-xl"
+                ? "bg-yellow-800 text-white text-xl font-bold"
+                : "hover:bg-yellow-800 hover:text-white"
             }`}
           >
             {category.name}
@@ -57,18 +59,22 @@ const CategoryDisplay = () => {
       </div>
 
       {selectedCategoryData && (
-        <div className="relative flex justify-center items-center max-w-[70%] h-[45vh] min-h-[30vh] mb-4 mx-auto">
+        <div className="relative flex justify-center items-center max-w-[80%] h-[55vh] min-h-[30vh] mb-4 mx-auto rounded-lg overflow-hidden shadow-xl">
           <img
-            className="w-full h-full object-cover opacity-90"
+            className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
             onClick={handleImageNav}
             src={selectedCategoryData.image}
             alt={selectedCategoryData.name}
           />
-          <div className="absolute bottom-0 left-0 w-full h-[30%] flex flex-col justify-center items-center bg-gray-200 bg-opacity-75 text-black p-4">
-            <p className="text-2xl font-bold">{selectedCategoryData.name}</p>
-            <p className="text-lg">{selectedCategoryData.description}</p>
-            <p className="text-lg">
-              No. of products: {productCount(selectedCategoryData._id)}
+          <div className="absolute bottom-0 left-0 w-full h-[30%] flex flex-col justify-center items-center bg-black bg-opacity-70 text-white p-6 backdrop-blur-sm">
+            <p className="text-3xl font-bold mb-2">
+              {selectedCategoryData.name}
+            </p>
+            <p className="text-lg text-center mb-2">
+              {selectedCategoryData.description}
+            </p>
+            <p className="text-lg font-semibold">
+              {productCount(selectedCategoryData._id)} Products Available
             </p>
           </div>
           <button

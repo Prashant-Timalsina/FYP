@@ -34,6 +34,7 @@ const orderSchema = new mongoose.Schema(
         description: { type: String },
         price: { type: Number },
         quantity: { type: Number, default: 1 },
+        isCustom: { type: Boolean, default: false },
         // isCustom: { type: Boolean, default: false }, // Flag for custom orders
       },
     ],
@@ -43,7 +44,8 @@ const orderSchema = new mongoose.Schema(
     payment: { type: Number, default: 0 },
     status: {
       type: String,
-      default: "Pending", // Remove enum but set a default value
+      enum: ["pending", "approved", "processing", "delivered", "cancelled"],
+      default: "pending",
     },
     paymentStatus: {
       type: String,
