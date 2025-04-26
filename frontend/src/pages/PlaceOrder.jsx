@@ -98,60 +98,15 @@ const PlaceOrder = () => {
 
       console.log("Order Data:", orderData);
 
-      switch (Method) {
-        case "physical":
-          const physicalResponse = await axios.post(
-            `${backendUrl}/api/order/physical`,
-            orderData,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-          // console.log("Token being sent:", token);
+      const response = await axios.post(
+        `${backendUrl}/api/order/physical`,
+        orderData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-          if (physicalResponse.data.success) {
-            // setCartItems([]);
-            navigate("/orders");
-          }
-          break;
-
-        case "online":
-          const onlineResponse = await axios.post(
-            `${backendUrl}/api/order/online`,
-            orderData,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-
-          if (onlineResponse.data.success) {
-            console.log("Online payment response:", onlineResponse.data);
-
-            const paymentData = {
-              amount: totalAmount,
-              orderId: onlineResponse.data.orderId,
-              success_url: "http://localhost:5173/payment-success",
-              failure_url: "http://localhost:5173/payment-failure",
-            };
-            navigate("/payment", { state: paymentData });
-          }
-          break;
-
-        case "cod":
-          const partialResponse = await axios.post(
-            `${backendUrl}/api/order/online`,
-            orderData,
-            { headers: { Authorization: `Bearer ${token}` } }
-          );
-
-          if (partialResponse.data.success) {
-            const paymentData = {
-              amount: partialPayment,
-              success_url: "http://localhost:5173/payment-success",
-              failure_url: "http://localhost:5173/payment-failure",
-            };
-            navigate("/payment", { state: paymentData });
-          }
-          break;
-
-        default:
-          break;
+      if (response.data.success) {
+        setCartItems([]);
+        navigate("/orders");
       }
     } catch (error) {
       console.error("Order placement error:", error);
@@ -251,60 +206,16 @@ const PlaceOrder = () => {
         <div>
           <CartTotal />
         </div>
-        <div>
-          <Title text1={"PAYMENT"} text2={"METHOD"} />
-        </div>
-        <div className="flex flex-col gap-4">
-          {[
-            {
-              id: "physical",
-              label: "Physical Deposit",
-              desc: "Visit our shop to deposit and confirm your order.",
-            },
-            {
-              id: "cod",
-              label: "Cash On Delivery",
-              desc: "Requires a deposit payment.",
-            },
-            {
-              id: "online",
-              label: "Full Payment",
-              desc: "Pay online via E-sewa.",
-            },
-          ].map(({ id, label, desc }) => (
-            <div
-              key={id}
-              onClick={() => setMethod(id)}
-              className={`flex items-center gap-4 p-4 border border-gray-300 rounded-xl cursor-pointer transition ${
-                Method === id
-                  ? "bg-green-100 border-green-400"
-                  : "hover:bg-gray-100"
-              }`}
-            >
-              <div
-                className={`w-6 h-6 rounded-full border border-gray-400 flex items-center justify-center transition ${
-                  Method === id ? "bg-green-400 border-green-600" : "bg-white"
-                }`}
-              >
-                {Method === id && (
-                  <div className="w-3 h-3 bg-white rounded-full"></div>
-                )}
-              </div>
-              <div>
-                <p className="font-semibold">{label}</p>
-                <p className="text-sm text-gray-600">{desc}</p>
-              </div>
-            </div>
-          ))}
-
-          <div className="w-full text-end mt-8">
-            <button
-              type="submit"
-              className="bg-black text-white px-16 py-3 text-sm"
-            >
-              PLACE ORDER
-            </button>
-          </div>
+        <div className="w-full text-end mt-8">
+          <p className="text-base font-semibold text-blue-600">
+            Note: COD requires pre payment of 20%
+          </p>
+          <button
+            type="submit"
+            className="bg-black text-white px-16 py-3 text-sm"
+          >
+            ADD TO ORDER
+          </button>
         </div>
       </div>
     </form>

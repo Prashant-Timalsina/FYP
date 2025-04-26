@@ -5,7 +5,9 @@ import CryptoJS from "crypto-js";
 
 const Payment = () => {
   const location = useLocation();
-  const { amount, orderId } = location.state || {};
+  const { amount, totalAmount, orderId } = location.state || {};
+  const [paymentAmount, setPaymentAmount] = useState(amount || "");
+  const [error, setError] = useState("");
 
   // Add signed fields
   const signedFields = "total_amount,transaction_uuid,product_code";
@@ -14,7 +16,7 @@ const Payment = () => {
     amount: amount || "",
     tax_amount: "0",
     total_amount: amount || "",
-    transaction_uuid: "", // We'll set this dynamically later
+    transaction_uuid: "",
     product_service_charge: "0",
     product_delivery_charge: "0",
     product_code: "EPAYTEST",
@@ -32,6 +34,31 @@ const Payment = () => {
     return CryptoJS.enc.Base64.stringify(hash);
   };
 
+  const handleAmountChange = (e) => {
+    const value = parseFloat(e.target.value);
+    const eightyPercentOfTotal = totalAmount * 0.8; // 80% of total amount
+    const remainingAfterPayment = amount - value;
+
+    if (value < 0.01) {
+      setError(`Minimum payment must be at least Rs. 0.01`);
+      setPaymentAmount(value);
+    } else if (value > amount) {
+      setError(`Payment cannot exceed remaining amount of Rs. ${amount}`);
+      setPaymentAmount(value);
+    } else if (remainingAfterPayment > eightyPercentOfTotal) {
+      const minimumPayment = amount - eightyPercentOfTotal;
+      setError(
+        `Payment must be at least Rs. ${minimumPayment.toFixed(
+          2
+        )} to ensure remaining amount is not more than 80% of total`
+      );
+      setPaymentAmount(value);
+    } else {
+      setError("");
+      setPaymentAmount(value);
+    }
+  };
+
   useEffect(() => {
     if (!amount || !orderId) return;
 
@@ -40,8 +67,8 @@ const Payment = () => {
 
     const updatedFormData = {
       ...formData,
-      amount,
-      total_amount: amount,
+      amount: paymentAmount || amount,
+      total_amount: paymentAmount || amount,
       transaction_uuid: transactionUuid,
     };
 
@@ -51,7 +78,7 @@ const Payment = () => {
       ...updatedFormData,
       signature,
     });
-  }, [amount, orderId]);
+  }, [amount, orderId, paymentAmount]);
 
   return (
     <form
@@ -68,7 +95,36 @@ const Payment = () => {
           <strong>Order ID:</strong> {orderId}
         </p>
         <p>
-          <strong>Amount:</strong> Rs. {formData.total_amount}
+          <strong>Total Amount:</strong> Rs. {totalAmount}
+        </p>
+        <p>
+          <strong>Remaining Amount:</strong> Rs. {amount}
+        </p>
+        <p className="text-sm text-blue-600 mt-1">
+          Note: Payment must ensure remaining amount is not more than 80% of
+          total (Rs. {(totalAmount * 0.8).toFixed(2)})
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <label className="block text-sm font-medium text-gray-700">
+          Payment Amount
+        </label>
+        <input
+          type="number"
+          value={paymentAmount}
+          onChange={handleAmountChange}
+          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          placeholder="Enter payment amount"
+          min={0.01}
+          max={amount}
+          step="0.01"
+        />
+        {error && <p className="text-red-500 text-sm">{error}</p>}
+        <p className="text-sm text-gray-500">
+          Allowed range: Rs.{" "}
+          {Math.max(0.01, amount - totalAmount * 0.8).toFixed(2)} to Rs.{" "}
+          {amount}
         </p>
       </div>
 
@@ -102,7 +158,8 @@ const Payment = () => {
 
       <button
         type="submit"
-        className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md transition duration-200"
+        disabled={!!error || !paymentAmount}
+        className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-md transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         Pay via E-Sewa
       </button>

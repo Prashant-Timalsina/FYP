@@ -1,5 +1,5 @@
 import React from "react";
-import NewsLetterBox from "../components/NewsLetterBox";
+// import NewsLetterBox from "../components/NewsLetterBox";
 import UserCustom from "../components/UserCustom";
 import CategoryDisplay from "../components/CategoryDisplay";
 import WoodDisplay from "../components/WoodDisplay";

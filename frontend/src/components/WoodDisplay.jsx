@@ -36,17 +36,19 @@ const WoodDisplay = () => {
   const selectedWoodData = woods[selectedWoodIndex];
 
   return (
-    <div className="border-1 border-slate-400 p-4">
-      <p className="text-center text-2xl font-bold">SELECT WOOD</p>
-      <div className="flex flex-wrap gap-4 items-center justify-center pb-4">
+    <div className="bg-white rounded-lg shadow-lg p-8 mt-12">
+      <p className="text-center text-3xl font-bold mb-8 text-yellow-800">
+        DISCOVER OUR WOODS
+      </p>
+      <div className="flex flex-wrap gap-4 items-center justify-center pb-8">
         {woods.map((wood, index) => (
           <p
             key={wood._id}
             onClick={() => handleWoodClick(index)}
-            className={`border-2 border-black px-4 py-1 rounded cursor-pointer ${
+            className={`border-2 border-yellow-800 px-6 py-2 rounded-full cursor-pointer transition-all duration-300 ${
               selectedWoodIndex === index
-                ? "text-xl font-bold underline"
-                : "hover:text-xl"
+                ? "bg-yellow-800 text-white text-xl font-bold"
+                : "hover:bg-yellow-800 hover:text-white"
             }`}
           >
             {wood.name}
@@ -55,26 +57,28 @@ const WoodDisplay = () => {
       </div>
 
       {selectedWoodData && (
-        <div className="relative flex justify-center items-center max-w-[70%] h-[45vh] min-h-[30vh] mb-4 mx-auto">
+        <div className="relative flex justify-center items-center max-w-[80%] h-[55vh] min-h-[30vh] mb-4 mx-auto rounded-lg overflow-hidden shadow-xl">
           <img
-            className="w-full h-full object-cover opacity-100"
+            className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
             onClick={handleImageNav}
-            src={selectedWoodData.images[0]} // Display the first image
+            src={selectedWoodData.images[0]}
             alt={selectedWoodData.name}
           />
-          <div className="absolute bottom-0 left-0 w-full h-[50%] flex flex-row justify-center items-center bg-gray-200 bg-opacity-75 text-black p-4">
-            <div className="flex-1">
-              <p className="text-2xl font-bold">{selectedWoodData.name}</p>
-              <p className="text-lg">{selectedWoodData.description}</p>
-              <p className="text-lg">
-                No. of products: {productCount(selectedWoodData._id)}
+          <div className="absolute bottom-0 left-0 w-full h-[50%] flex flex-row justify-between items-center bg-black bg-opacity-70 text-white p-6 backdrop-blur-sm">
+            <div className="flex-1 pr-4">
+              <p className="text-3xl font-bold mb-2">{selectedWoodData.name}</p>
+              <p className="text-lg mb-2">{selectedWoodData.description}</p>
+              <p className="text-lg font-semibold">
+                {productCount(selectedWoodData._id)} Products Available
               </p>
             </div>
-            <div>
-              <p className="text-2xl font-bold">Advantages</p>
-              <ul className="list-disc list-inside">
+            <div className="flex-1 pl-4 border-l border-white">
+              <p className="text-2xl font-bold mb-3">Advantages</p>
+              <ul className="list-disc list-inside space-y-1">
                 {selectedWoodData.advantages.map((advantage, index) => (
-                  <li key={index}>{advantage}</li>
+                  <li key={index} className="text-lg">
+                    {advantage}
+                  </li>
                 ))}
               </ul>
             </div>

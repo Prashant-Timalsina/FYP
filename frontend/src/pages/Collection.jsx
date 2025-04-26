@@ -11,7 +11,6 @@ const Collection = () => {
     categories,
     woods,
     products,
-    currency,
     currentPage,
     totalPages,
     changePage,

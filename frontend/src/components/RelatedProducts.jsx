@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 import { ShopContext } from "../context/ShopContext";
 
 const RelatedProducts = ({ currentProductId }) => {
-  const { backendUrl } = useContext(ShopContext);
+  const { backendUrl, currency } = useContext(ShopContext);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [category, setCategory] = useState(null);
   const [wood, setWood] = useState(null);
@@ -81,7 +81,6 @@ const RelatedProducts = ({ currentProductId }) => {
 
   return (
     <div className="flex flex-col">
-      <h3 className="text-lg font-semibold mb-4">Related Products</h3>
       <div className="flex gap-4 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400 scrollbar-track-gray-200">
         {relatedProducts.map((product) => {
           return (
@@ -95,7 +94,10 @@ const RelatedProducts = ({ currentProductId }) => {
                 className="w-full h-32 object-cover rounded-md"
               />
               <h3 className="mt-2 text-sm font-medium">{product.name}</h3>
-              <p className="text-gray-500 text-xs mt-1">${product.price}</p>
+              <p className="text-gray-500 text-xs mt-1">
+                {currency}
+                {product.price}
+              </p>
             </div>
           );
         })}

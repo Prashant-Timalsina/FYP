@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { assets } from "../assets/assets";
 import { ShopContext } from "../context/ShopContext";
 
@@ -8,11 +8,36 @@ const Navbar = () => {
     useContext(ShopContext);
   const [visible, setVisible] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
+  const location = useLocation();
+  const isCollectionPage = location.pathname === "/collection";
 
   const logOut = () => {
     setToken(null);
     localStorage.removeItem("token");
     navigate("/login");
+  };
+
+  let tooltipTimeout;
+  const handleMouseEnter = () => {
+    if (!isCollectionPage) {
+      tooltipTimeout = setTimeout(() => {
+        setShowTooltip(true);
+      }, 1000);
+    }
+  };
+
+  const handleMouseLeave = () => {
+    clearTimeout(tooltipTimeout);
+    setShowTooltip(false);
+  };
+
+  const handleSearchClick = () => {
+    if (isCollectionPage) {
+      setShowSearch(!showSearch);
+    } else {
+      navigate("/collection");
+    }
   };
 
   return (
@@ -41,18 +66,23 @@ const Navbar = () => {
       </ul>
 
       <div className="flex items-center gap-6">
-        {/* <img
-          src={assets.search}
-          className="w-6 cursor-pointer"
-          alt="Search icon"
-          onClick={() => setShowSearch(true)}
-        /> */}
-        <img
-          src={assets.search}
-          className="w-6 cursor-pointer"
-          alt="Search icon"
-          onClick={() => setShowSearch(!showSearch)}
-        />
+        <div className="relative">
+          <img
+            src={assets.search}
+            className={`w-6 cursor-pointer ${
+              !isCollectionPage ? "opacity-50" : ""
+            }`}
+            alt="Search icon"
+            onClick={handleSearchClick}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
+          />
+          {showTooltip && !isCollectionPage && (
+            <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+              Search works only on Collection page
+            </div>
+          )}
+        </div>
 
         <div className="relative">
           {token ? (

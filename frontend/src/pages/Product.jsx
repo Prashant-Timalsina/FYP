@@ -186,13 +186,13 @@ const Product = () => {
         </div>
         <div className="flex flex-col gap-4 border px-6 py-6 text-sm text-gray-500">
           {activeTab === "related" ? (
-            // <RelatedProducts
-            //   category={category}
-            //   wood={wood}
-            //   currentProductId={id}
-            // />
-            <p>Placeholder for Related Products</p>
+            <RelatedProducts
+              category={category}
+              wood={wood}
+              currentProductId={id}
+            />
           ) : (
+            // <p>Placeholder for Related Products</p>
             // <p>Related products go here...(For now placeholder)</p>
             <p>Reviews go here...(For now placeholder)</p>
           )}

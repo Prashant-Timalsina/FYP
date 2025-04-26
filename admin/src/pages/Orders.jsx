@@ -103,17 +103,41 @@ const Orders = () => {
     }
   };
 
-  const updatePayment = async (orderId, payment) => {
+  const updatePayment = async (orderId, newPayment) => {
     try {
-      const response = await axios.put(
-        `${backendUrl}/api/order/payment`,
-        { orderId, payment },
-        { headers: { Authorization: `Bearer ${token}` } }
+      // First fetch the current order data
+      const orderResponse = await axios.get(
+        `${backendUrl}/api/order/${orderId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
 
-      if (response.data.success) {
+      if (!orderResponse.data.success) {
+        throw new Error("Failed to fetch order data");
+      }
+
+      const currentOrder = orderResponse.data.order;
+      const currentPayment = currentOrder.payment || 0;
+      const totalPayment = currentPayment + newPayment;
+
+      // Now update with the new total payment
+      const updateResponse = await axios.put(
+        `${backendUrl}/api/order/payment`,
+        {
+          orderId,
+          payment: totalPayment,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (updateResponse.data.success) {
         toast.success("Payment updated successfully.");
-        updateOrderLocally(response.data.order);
+        updateOrderLocally(updateResponse.data.order);
+      } else {
+        throw new Error("Failed to update payment");
       }
     } catch (err) {
       const msg = err.response?.data?.message || "Failed to update payment.";
@@ -136,6 +160,7 @@ const Orders = () => {
               >
                 <option value="">All Status</option>
                 <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
                 <option value="processing">Processing</option>
                 <option value="delivered">Delivered</option>
                 <option value="cancelled">Cancelled</option>
@@ -181,6 +206,8 @@ const Orders = () => {
                                     onClick={() => {
                                       let nextStatus = "";
                                       if (order.status === "pending")
+                                        nextStatus = "approved";
+                                      else if (order.status === "approved")
                                         nextStatus = "processing";
                                       else if (order.status === "processing")
                                         nextStatus = "delivered";
@@ -208,6 +235,8 @@ const Orders = () => {
                                     }
                                   >
                                     {order.status === "pending"
+                                      ? "Approve Order"
+                                      : order.status === "approved"
                                       ? "Mark as Processing"
                                       : order.status === "processing"
                                       ? "Mark as Delivered"

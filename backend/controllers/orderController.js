@@ -182,11 +182,26 @@ export const userOrders = async (req, res) => {
     const userId = req.user.id;
     const resultPerPage = Number(req.query.limit) || 5;
     const currentPage = Number(req.query.page) || 1;
+    const status = req.query.status;
+    const paymentStatus = req.query.paymentStatus;
 
-    const totalOrders = await orderModel.countDocuments({ userId });
+    // Build filter object
+    const filter = { userId };
+    if (status && status !== "all") {
+      filter.status = status;
+    }
+    if (paymentStatus && paymentStatus !== "all") {
+      // Convert paymentStatus to proper case for comparison
+      const formattedPaymentStatus =
+        paymentStatus.charAt(0).toUpperCase() +
+        paymentStatus.slice(1).toLowerCase();
+      filter.paymentStatus = formattedPaymentStatus;
+    }
+
+    const totalOrders = await orderModel.countDocuments(filter);
 
     const orders = await orderModel
-      .find({ userId })
+      .find(filter)
       .sort({ date: -1 })
       .skip(resultPerPage * (currentPage - 1))
       .limit(resultPerPage)
@@ -197,6 +212,8 @@ export const userOrders = async (req, res) => {
       success: true,
       orders,
       totalOrders,
+      currentPage,
+      totalPages: Math.ceil(totalOrders / resultPerPage),
     });
   } catch (error) {
     console.error("Error fetching user orders:", error);
@@ -212,7 +229,7 @@ export const updateStatus = async (req, res) => {
   try {
     const { orderId, status } = req.body;
 
-    const validStatuses = ["pending", "processing", "delivered"];
+    const validStatuses = ["pending", "approved", "processing", "delivered"];
     if (!validStatuses.includes(status)) {
       return res.status(400).json({
         success: false,
@@ -335,10 +352,11 @@ export const updatePaymentStatus = async (req, res) => {
     const { orderId, payment } = req.body;
 
     const order = await orderModel.findById(orderId);
-    if (!order)
+    if (!order) {
       return res
         .status(404)
         .json({ success: false, message: "Order not found" });
+    }
 
     if (payment > order.amount) {
       return res.status(400).json({
@@ -368,5 +386,133 @@ export const updatePaymentStatus = async (req, res) => {
   } catch (error) {
     console.error("Error updating payment status:", error);
     res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+export const getOrderById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log("Fetching order:", id);
+
+    const order = await orderModel.findById(id);
+    if (!order) {
+      console.log("Order not found:", id);
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
+    }
+
+    console.log("Order found:", order);
+    return res.status(200).json({ success: true, order });
+  } catch (error) {
+    console.error("Error fetching order:", error);
+    res.status(500).json({ success: false, message: "Internal Server Error" });
+  }
+};
+
+export const placeCustomOrder = async (req, res) => {
+  try {
+    const {
+      description,
+      category,
+      wood,
+      length,
+      breadth,
+      height,
+      price,
+      quantity,
+      address,
+    } = req.body;
+
+    const userId = req.user.id;
+    const user = await userModel.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Handle image uploads
+    const images = [];
+    if (req.files) {
+      for (let i = 1; i <= 4; i++) {
+        if (req.files[`image${i}`]) {
+          images.push(req.files[`image${i}`][0].filename);
+        }
+      }
+    }
+
+    const orderData = {
+      orderId: uuidv4(),
+      userId,
+      items: [
+        {
+          name: "Custom Product",
+          category,
+          wood,
+          length: Number(length),
+          breadth: Number(breadth),
+          height: Number(height),
+          image: images[0] || null,
+          description,
+          price: Number(price),
+          quantity: Number(quantity),
+          isCustom: true,
+        },
+      ],
+      address,
+      amount: Number(price) * Number(quantity),
+      paymentMethod: "physical",
+      payment: 0,
+      date: new Date(),
+      status: "pending",
+    };
+
+    const order = new orderModel(orderData);
+    await order.save();
+
+    const subject = "Custom Order Confirmation - TimberCraft";
+    const message = `
+Dear ${user.name},
+
+Thank you for placing a custom order with TimberCraft!
+
+Your order details:
+- Order ID: ${order._id}
+- Total Amount: NRs. ${order.amount}
+- Status: Pending (awaiting approval)
+- Delivery Address: ${address.street}, ${address.city}, ${address.zipcode}
+- Payment Method: Physical Payment (Pending)
+
+Custom Product Details:
+- Description: ${description}
+- Dimensions: ${length} x ${breadth} x ${height}
+- Category: ${category}
+- Wood Type: ${wood}
+- Quantity: ${quantity}
+
+We will process your order shortly. You will receive updates as your order moves through different stages.
+
+If you have any questions, feel free to contact our support team.
+
+Best regards,  
+TimberCraft Team
+    `;
+
+    await sendEmail(user.email, subject, message);
+
+    res.status(201).json({
+      success: true,
+      message: "Custom order placed successfully. Email sent!",
+      order,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
   }
 };
