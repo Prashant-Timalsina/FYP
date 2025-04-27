@@ -11,6 +11,7 @@ import cartRouter from "./routes/cartRoutes.js";
 import sendEmail from "./middlewares/NodeMailer.js";
 import orderRouter from "./routes/orderRoutes.js";
 import favRouter from "./routes/favoriteRoutes.js";
+import feedbackRouter from "./routes/feedbackRoutes.js";
 import bodyParser from "body-parser";
 // import paymentRouter from "./routes/paymentRoutes.js";
 import chatRouter from "./routes/chatRoutes.js";
@@ -42,6 +43,7 @@ app.use("/api/wood", woodRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/order", orderRouter);
 app.use("/api/fav", favRouter);
+app.use("/api/feedback", feedbackRouter);
 // app.use("/api/payment", paymentRouter);
 
 app.use("/api/chat", chatRouter);
