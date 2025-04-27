@@ -4,10 +4,12 @@ import { ShopContext } from "../context/ShopContext";
 import { assets } from "../assets/assets"; // Static assets like icons
 import { toast } from "react-toastify";
 import RelatedProducts from "../components/RelatedProducts";
+import ProductReviews from "../components/ProductReviews";
 
 const Product = () => {
   const {
     addToCart,
+    currency,
     product,
     category,
     wood,
@@ -103,7 +105,7 @@ const Product = () => {
           <h1 className="font-medium text-2xl mt-2">{product.name}</h1>
 
           {/* Star Rating */}
-          <div className="flex items-center gap-1 mt-2">
+          {/*<div className="flex items-center gap-1 mt-2">
             {[...Array(5)].map((_, index) => (
               <img
                 key={index}
@@ -113,9 +115,12 @@ const Product = () => {
               />
             ))}
             <p className="pl-2">(122 Reviews)</p>
-          </div>
+          </div>*/}
 
-          <p className="mt-5 text-3xl font-medium">${product.price}</p>
+          <p className="mt-5 text-3xl font-medium">
+            {currency}
+            {product.price}
+          </p>
           <p className="mt-5 text-gray-500 md:w-4/5">{product.description}</p>
 
           {/* Category & Wood Type */}
@@ -181,7 +186,7 @@ const Product = () => {
             }`}
             onClick={() => setActiveTab("reviews")}
           >
-            Reviews (122)
+            Reviews
           </button>
         </div>
         <div className="flex flex-col gap-4 border px-6 py-6 text-sm text-gray-500">
@@ -192,15 +197,12 @@ const Product = () => {
               currentProductId={id}
             />
           ) : (
-            // <p>Placeholder for Related Products</p>
-            // <p>Related products go here...(For now placeholder)</p>
-            <p>Reviews go here...(For now placeholder)</p>
+            <ProductReviews productId={productId} />
           )}
         </div>
       </div>
     </div>
   ) : (
-    // </div>
     <div className="flex justify-center items-center h-96 text-gray-600 text-lg">
       Loading product details...
     </div>
