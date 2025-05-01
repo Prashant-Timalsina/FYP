@@ -5,8 +5,6 @@ import ApiFeature from "../utils/ApiFeature.js";
 
 import { v4 as uuidv4 } from "uuid";
 
-export const createOrder = async (req, res) => {};
-
 export const placeOrder = async (req, res) => {
   try {
     const { items, amount, address } = req.body;
@@ -64,75 +62,6 @@ TimberCraft Team
       success: true,
       message: "Order placed successfully. Email sent!",
       order,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-export const placeOrderOnline = async (req, res) => {
-  try {
-    const { items, amount, address } = req.body;
-    const userId = req.user.id;
-
-    const user = await userModel.findById(userId);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found",
-      });
-    }
-
-    const orderData = {
-      orderId: uuidv4(),
-      userId,
-      items,
-      address,
-      amount,
-      paymentMethod: "online",
-      payment: 0,
-      date: new Date(),
-      status: "pending",
-    };
-
-    const order = new orderModel(orderData);
-    await order.save();
-
-    // await userModel.findByIdAndUpdate(userId, { cartData: [] });
-
-    const subject = "Order Confirmation - TimberCraft";
-    const message = `
-Dear ${user.name},
-
-Thank you for placing an order with TimberCraft!
-
-Your order details:
-- Order ID: ${order._id}
-- Total Amount: NRs. ${amount}
-- Status: Pending (awaiting payment confirmation)
-- Delivery Address: ${address.street}, ${address.city}, ${address.zipcode}
-- Payment Method: Online Payment (Pending)
-
-We will process your order shortly. You will receive updates as your order moves through different stages.
-
-If you have any questions, feel free to contact our support team.
-
-Best regards,  
-TimberCraft Team
-    `;
-
-    await sendEmail(user.email, subject, message);
-
-    res.status(201).json({
-      success: true,
-      message: "Order placed successfully. Email sent!",
-      order,
-      orderId: order._id,
-      amount: order.amount,
     });
   } catch (error) {
     console.error(error);
@@ -444,12 +373,14 @@ export const placeCustomOrder = async (req, res) => {
       }
     }
 
+    // Parse address from JSON string
+    const parsedAddress = JSON.parse(address);
+
     const orderData = {
       orderId: uuidv4(),
       userId,
       items: [
         {
-          name: "Custom Product",
           category,
           wood,
           length: Number(length),
@@ -462,7 +393,7 @@ export const placeCustomOrder = async (req, res) => {
           isCustom: true,
         },
       ],
-      address,
+      address: parsedAddress,
       amount: Number(price) * Number(quantity),
       paymentMethod: "physical",
       payment: 0,
@@ -483,8 +414,7 @@ Your order details:
 - Order ID: ${order._id}
 - Total Amount: NRs. ${order.amount}
 - Status: Pending (awaiting approval)
-- Delivery Address: ${address.street}, ${address.city}, ${address.zipcode}
-- Payment Method: Physical Payment (Pending)
+- Delivery Address: ${parsedAddress[0].street}, ${parsedAddress[0].city}, ${parsedAddress[0].zipcode}
 
 Custom Product Details:
 - Description: ${description}

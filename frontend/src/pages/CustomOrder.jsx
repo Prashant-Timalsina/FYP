@@ -3,9 +3,10 @@ import { assets } from "../assets/assets.js";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { ShopContext } from "../context/ShopContext";
+import DeliveryInformation from "../components/DeliveryInformation";
 
 const CustomProduct = () => {
-  const { backendUrl, navigate, token } = useContext(ShopContext);
+  const { backendUrl, navigate, token, delivery_fee } = useContext(ShopContext);
   const [description, setDescription] = useState("");
   const [category, setCategory] = useState("");
   const [wood, setwood] = useState("");
@@ -13,12 +14,30 @@ const CustomProduct = () => {
   const [breadth, setBreadth] = useState("");
   const [height, setHeight] = useState("");
   const [price, setPrice] = useState("");
+  const [quantity, setQuantity] = useState(1);
   const [categories, setCategories] = useState([]);
   const [woods, setWoods] = useState([]);
   const [image1, setImage1] = useState(null);
   const [image2, setImage2] = useState(null);
   const [image3, setImage3] = useState(null);
   const [image4, setImage4] = useState(null);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    street: "",
+    city: "",
+    province: "",
+    zipcode: "",
+    phone: "",
+  });
+
+  const onChangeHandler = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
 
   useEffect(() => {
     const fetchCategories = async () => {
@@ -68,16 +87,17 @@ const CustomProduct = () => {
       return;
     }
 
-    const totalPrice =
+    // Calculate base price without quantity
+    const basePrice =
       selectedCategory.price * selectedWood.price * length * breadth * height;
-    setPrice(totalPrice.toFixed(2));
+    setPrice(basePrice.toFixed(2));
   };
 
   const handleImageChange = (e, setImage) => {
     setImage(e.target.files[0]);
   };
 
-  const handleSubmit = async (e) => {
+  const onSubmitHandler = async (e) => {
     e.preventDefault();
 
     if (!description || !category || !wood || !length || !breadth || !height) {
@@ -90,38 +110,57 @@ const CustomProduct = () => {
       return;
     }
 
-    const formData = new FormData();
-    formData.append("description", description);
-    formData.append("category", category);
-    formData.append("wood", wood);
-    formData.append("length", length);
-    formData.append("breadth", breadth);
-    formData.append("height", height);
-    formData.append("price", price);
-
-    if (image1) formData.append("image1", image1);
-    if (image2) formData.append("image2", image2);
-    if (image3) formData.append("image3", image3);
-    if (image4) formData.append("image4", image4);
-
-    // Debugging: Log form data before sending the request
-    console.log("Form Data Submitted:");
-    console.log({
-      description,
-      category,
-      wood,
-      length,
-      breadth,
-      height,
-      price,
-      images: [image1, image2, image3, image4].filter(Boolean), // Only include non-null images
-    });
+    // Validate delivery information
+    if (
+      !formData.firstName ||
+      !formData.lastName ||
+      !formData.email ||
+      !formData.street ||
+      !formData.city ||
+      !formData.province ||
+      !formData.zipcode ||
+      !formData.phone
+    ) {
+      toast.error("Please fill all delivery information fields");
+      return;
+    }
 
     try {
+      const selectedCategory = categories.find((c) => c._id === category);
+      const selectedWood = woods.find((w) => w._id === wood);
+
+      const orderItems = [
+        {
+          name: description,
+          category: selectedCategory.name,
+          wood: selectedWood.name,
+          length: Number(length),
+          breadth: Number(breadth),
+          height: Number(height),
+          image: image1 ? URL.createObjectURL(image1) : null,
+          quantity: Number(quantity),
+          price: Number(price),
+        },
+      ];
+
+      // Calculate total amount without delivery fee
+      const totalAmount = Number(price) * Number(quantity);
+
+      const orderData = {
+        items: orderItems,
+        address: formData,
+        amount: totalAmount,
+      };
+
       const response = await axios.post(
-        `${backendUrl}/api/cart/addCustom`,
-        formData,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `${backendUrl}/api/order/physical`,
+        orderData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
 
       if (response.data.success) {
@@ -137,7 +176,18 @@ const CustomProduct = () => {
         setBreadth("");
         setHeight("");
         setPrice("");
-        navigate("/cart");
+        setQuantity(1);
+        setFormData({
+          firstName: "",
+          lastName: "",
+          email: "",
+          street: "",
+          city: "",
+          province: "",
+          zipcode: "",
+          phone: "",
+        });
+        navigate("/orders");
       } else {
         toast.error(response.data.message);
       }
@@ -149,160 +199,188 @@ const CustomProduct = () => {
 
   return (
     <form
-      onSubmit={handleSubmit}
-      className="flex flex-col  w-full items-start gap-3 p-6 bg-white shadow-md rounded-md"
+      onSubmit={onSubmitHandler}
+      className="flex flex-col lg:flex-row gap-10"
     >
-      <h1 className="text-2xl font-bold mb-4">Custom Product</h1>
+      {/* Left Side - Custom Product Details */}
+      <div className="flex-1 space-y-6">
+        {/* Product Details */}
+        <div className="w-full border border-gray-300 p-6 rounded-lg shadow-md bg-white">
+          <h2 className="text-xl font-bold mb-4">Custom Product Details</h2>
 
-      {/* Image Upload */}
-      <div>
-        <p className="mb-2">Upload Image (Design Reference only)</p>
-        <div className="flex gap-2 overflow-x-auto whitespace-nowrap">
-          <label htmlFor="image1">
-            <img
-              className="w-[150px] h-[150px] object-cover"
-              src={!image1 ? assets.upload_area : URL.createObjectURL(image1)}
-              alt="Upload"
-            />
-            <input
-              onChange={(e) => handleImageChange(e, setImage1)}
-              type="file"
-              id="image1"
-              hidden
-            />
-          </label>
-          <label htmlFor="image2">
-            <img
-              className="w-[150px] h-[150px] object-cover"
-              src={!image2 ? assets.upload_area : URL.createObjectURL(image2)}
-              alt="Upload"
-            />
-            <input
-              onChange={(e) => handleImageChange(e, setImage2)}
-              type="file"
-              id="image2"
-              hidden
-            />
-          </label>
-          <label htmlFor="image3">
-            <img
-              className="w-[150px] h-[150px] object-cover"
-              src={!image3 ? assets.upload_area : URL.createObjectURL(image3)}
-              alt="Upload"
-            />
-            <input
-              onChange={(e) => handleImageChange(e, setImage3)}
-              type="file"
-              id="image3"
-              hidden
-            />
-          </label>
-          <label htmlFor="image4">
-            <img
-              className="w-[150px] h-[150px] object-cover"
-              src={!image4 ? assets.upload_area : URL.createObjectURL(image4)}
-              alt="Upload"
-            />
-            <input
-              onChange={(e) => handleImageChange(e, setImage4)}
-              type="file"
-              id="image4"
-              hidden
-            />
-          </label>
-        </div>
-      </div>
+          {/* Image Upload */}
+          <div className="mb-4">
+            <p className="mb-2">Upload Images (Design Reference only)</p>
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                {
+                  id: "image1",
+                  image: image1,
+                  setImage: setImage1,
+                },
+                {
+                  id: "image2",
+                  image: image2,
+                  setImage: setImage2,
+                },
+                {
+                  id: "image3",
+                  image: image3,
+                  setImage: setImage3,
+                },
+                {
+                  id: "image4",
+                  image: image4,
+                  setImage: setImage4,
+                },
+              ].map(({ id, image, setImage }) => (
+                <div key={id} className="flex flex-col items-center">
+                  <label htmlFor={id} className="cursor-pointer">
+                    <img
+                      className="w-[150px] h-[150px] object-cover border rounded-lg"
+                      src={
+                        !image ? assets.upload_area : URL.createObjectURL(image)
+                      }
+                      alt={id}
+                    />
+                    {/* <p className="text-sm text-center mt-2">{label}</p> */}
+                    <input
+                      onChange={(e) => handleImageChange(e, setImage)}
+                      type="file"
+                      id={id}
+                      hidden
+                    />
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
 
-      {/* Description */}
-      <div className="w-full">
-        <p className="mb-2">Product Description</p>
-        <textarea
-          onChange={(e) => setDescription(e.target.value)}
-          value={description}
-          className="w-full max-w-[500px] px-3 py-2 border rounded-md"
-          placeholder="Enter product description"
-          required
-        />
-      </div>
-
-      {/* Category & Wood Selection */}
-      <div className="flex flex-col w-full gap-4 mb-4">
-        <div>
-          <p className="mb-2">Category</p>
-          <select
-            onChange={(e) => setCategory(e.target.value)}
-            value={category}
-            className="px-3 py-2 border rounded-md"
-            required
-          >
-            <option value="" disabled>
-              Select category
-            </option>
-            {categories.map((cat) => (
-              <option key={cat._id} value={cat._id}>
-                {cat.name}: {cat.price}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <p className="mb-2">Wood Name</p>
-          <select
-            onChange={(e) => setwood(e.target.value)}
-            value={wood}
-            className="px-3 py-2 border rounded-md"
-            required
-          >
-            <option value="" disabled>
-              Select wood
-            </option>
-            {woods.map((wood) => (
-              <option key={wood._id} value={wood._id}>
-                {wood.name}: {wood.price}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Dimensions & Price Calculation */}
-      <div className="flex flex-wrap gap-2">
-        {[
-          ["Length", setLength],
-          ["Breadth", setBreadth],
-          ["Height", setHeight],
-        ].map(([label, setter]) => (
-          <div key={label}>
-            <p className="mb-2">{label}</p>
-            <input
-              type="number"
-              min="0"
-              className="px-3 py-2 border rounded-md"
-              onChange={(e) => setter(e.target.value)}
+          {/* Description */}
+          <div className="mb-4">
+            <p className="mb-2">Product Description</p>
+            <textarea
+              onChange={(e) => setDescription(e.target.value)}
+              value={description}
+              className="w-full px-3 py-2 border rounded-md"
+              placeholder="Enter product description"
+              required
             />
           </div>
-        ))}
+
+          {/* Category & Wood Selection */}
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <p className="mb-2">Category</p>
+              <select
+                onChange={(e) => setCategory(e.target.value)}
+                value={category}
+                className="w-full px-3 py-2 border rounded-md"
+                required
+              >
+                <option value="" disabled>
+                  Select category
+                </option>
+                {categories.map((cat) => (
+                  <option key={cat._id} value={cat._id}>
+                    {cat.name}: {cat.price}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <p className="mb-2">Wood Name</p>
+              <select
+                onChange={(e) => setwood(e.target.value)}
+                value={wood}
+                className="w-full px-3 py-2 border rounded-md"
+                required
+              >
+                <option value="" disabled>
+                  Select wood
+                </option>
+                {woods.map((wood) => (
+                  <option key={wood._id} value={wood._id}>
+                    {wood.name}: {wood.price}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Dimensions */}
+          <div className="grid grid-cols-3 gap-4 mb-4">
+            {[
+              ["Length", setLength],
+              ["Breadth", setBreadth],
+              ["Height", setHeight],
+            ].map(([label, setter]) => (
+              <div key={label}>
+                <p className="mb-2">{label}</p>
+                <input
+                  type="number"
+                  min="0"
+                  className="w-full px-3 py-2 border rounded-md"
+                  onChange={(e) => setter(e.target.value)}
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Price Calculation */}
+          <div className="flex items-center gap-4 mb-4">
+            <button
+              className="border px-3 py-2"
+              type="button"
+              onClick={calculatePrice}
+            >
+              Calculate Price
+            </button>
+            <span className="text-lg font-semibold">
+              Price: <span className="underline font-bold px-3">{price}</span>
+            </span>
+          </div>
+
+          {/* Quantity */}
+          <div className="mb-4">
+            <p className="mb-2">
+              Quantity{"  "}
+              <span className="text-red-500 text-sm">
+                (Quantity is not calculated in price)
+              </span>
+            </p>
+            <input
+              type="number"
+              min="1"
+              value={quantity}
+              onChange={(e) =>
+                setQuantity(Math.max(1, parseInt(e.target.value) || 1))
+              }
+              className="w-full px-3 py-2 border rounded-md"
+              required
+            />
+          </div>
+        </div>
+
+        <div className="w-full text-end mt-8">
+          <p className="text-base font-semibold text-blue-600">
+            Note: COD requires pre payment of 20%
+          </p>
+          <button
+            type="submit"
+            className="bg-black text-white px-16 py-3 text-sm"
+          >
+            PLACE ORDER
+          </button>
+        </div>
       </div>
 
-      <button
-        className="border px-3 py-2 mt-4"
-        type="button"
-        onClick={calculatePrice}
-      >
-        Calculate Price
-      </button>
-
-      <span className="text-lg font-semibold">
-        Price: <span className="underline font-bold px-3">{price}</span>
-      </span>
-
-      <button
-        type="submit"
-        className="mt-4 bg-black text-white px-4 py-2 rounded-md"
-      >
-        Add To Cart
-      </button>
+      {/* Right Side - Delivery Information */}
+      <DeliveryInformation
+        formData={formData}
+        onChangeHandler={onChangeHandler}
+      />
     </form>
   );
 };
