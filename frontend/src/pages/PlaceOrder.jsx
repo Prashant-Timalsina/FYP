@@ -73,6 +73,7 @@ const PlaceOrder = () => {
               length: item.length,
               breadth: item.breadth,
               height: item.height,
+              price: productData.price,
               quantity: item.quantity,
             };
           }

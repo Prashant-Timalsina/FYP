@@ -12,6 +12,7 @@ const AdminContextProvider = ({ children }) => {
   const [wood, setWood] = useState([]);
   const navigate = useNavigate();
   const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  const currency = "NRs.";
 
   useEffect(() => {
     if (token) {
@@ -61,6 +62,7 @@ const AdminContextProvider = ({ children }) => {
         wood,
         fetchCategory,
         fetchWood,
+        currency,
       }}
     >
       {children}

@@ -4,6 +4,16 @@ import sendEmail from "../utils/emailService.js";
 import ApiFeature from "../utils/ApiFeature.js";
 
 import { v4 as uuidv4 } from "uuid";
+import fs from "fs";
+import path from "path";
+
+// Make sure uploads folder exists
+const ensureUploadsDir = () => {
+  const dir = path.join(process.cwd(), "uploads");
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+};
 
 export const placeOrder = async (req, res) => {
   try {
@@ -157,6 +167,12 @@ export const userOrders = async (req, res) => {
 export const updateStatus = async (req, res) => {
   try {
     const { orderId, status } = req.body;
+    console.log(
+      "Received status update request for order:",
+      orderId,
+      "with status:",
+      status
+    );
 
     const validStatuses = ["pending", "approved", "processing", "delivered"];
     if (!validStatuses.includes(status)) {
@@ -341,18 +357,7 @@ export const getOrderById = async (req, res) => {
 
 export const placeCustomOrder = async (req, res) => {
   try {
-    const {
-      description,
-      category,
-      wood,
-      length,
-      breadth,
-      height,
-      price,
-      quantity,
-      address,
-    } = req.body;
-
+    const { orderId, items, address, amount } = req.body;
     const userId = req.user.id;
     const user = await userModel.findById(userId);
 
@@ -363,38 +368,26 @@ export const placeCustomOrder = async (req, res) => {
       });
     }
 
-    // Handle image uploads
-    const images = [];
-    if (req.files) {
-      for (let i = 1; i <= 4; i++) {
-        if (req.files[`image${i}`]) {
-          images.push(req.files[`image${i}`][0].filename);
-        }
-      }
-    }
+    ensureUploadsDir();
 
-    // Parse address from JSON string
-    const parsedAddress = JSON.parse(address);
+    const processedItems = await Promise.all(
+      items.map(async (item, index) => {
+        if (item.images && Array.isArray(item.images)) {
+          return {
+            ...item,
+            image: item.images, // Store all images in the image array
+          };
+        }
+        return item;
+      })
+    );
 
     const orderData = {
       orderId: uuidv4(),
       userId,
-      items: [
-        {
-          category,
-          wood,
-          length: Number(length),
-          breadth: Number(breadth),
-          height: Number(height),
-          image: images[0] || null,
-          description,
-          price: Number(price),
-          quantity: Number(quantity),
-          isCustom: true,
-        },
-      ],
-      address: parsedAddress,
-      amount: Number(price) * Number(quantity),
+      items: processedItems,
+      address,
+      amount: Number(amount),
       paymentMethod: "physical",
       payment: 0,
       date: new Date(),
@@ -403,6 +396,8 @@ export const placeCustomOrder = async (req, res) => {
 
     const order = new orderModel(orderData);
     await order.save();
+
+    const firstItem = items[0];
 
     const subject = "Custom Order Confirmation - TimberCraft";
     const message = `
@@ -414,14 +409,28 @@ Your order details:
 - Order ID: ${order._id}
 - Total Amount: NRs. ${order.amount}
 - Status: Pending (awaiting approval)
-- Delivery Address: ${parsedAddress[0].street}, ${parsedAddress[0].city}, ${parsedAddress[0].zipcode}
+- Delivery Address: ${address.street}, ${address.city}, ${address.zipcode}
 
 Custom Product Details:
-- Description: ${description}
-- Dimensions: ${length} x ${breadth} x ${height}
-- Category: ${category}
-- Wood Type: ${wood}
-- Quantity: ${quantity}
+- Description: ${firstItem.name}
+- Dimensions: ${firstItem.length} x ${firstItem.breadth} x ${firstItem.height}
+- Category: ${firstItem.category}
+- Wood Type: ${firstItem.wood}
+- Quantity: ${firstItem.quantity}
+${firstItem.color ? `- Color: ${firstItem.color}` : ""}
+${firstItem.coating ? `- Coating: ${firstItem.coating}` : ""}
+${
+  firstItem.numberOfDrawers
+    ? `- Number of Drawers: ${firstItem.numberOfDrawers}`
+    : ""
+}
+${
+  firstItem.numberOfCabinets
+    ? `- Number of Cabinets: ${firstItem.numberOfCabinets}`
+    : ""
+}
+${firstItem.handleType ? `- Handle Type: ${firstItem.handleType}` : ""}
+${firstItem.legStyle ? `- Leg Style: ${firstItem.legStyle}` : ""}
 
 We will process your order shortly. You will receive updates as your order moves through different stages.
 

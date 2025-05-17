@@ -4,6 +4,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { ShopContext } from "../context/ShopContext";
 import DeliveryInformation from "../components/DeliveryInformation";
+import uploadImage from "../utils/uploadImage.js";
 
 const CustomProduct = () => {
   const { backendUrl, navigate, token, delivery_fee } = useContext(ShopContext);
@@ -17,10 +18,19 @@ const CustomProduct = () => {
   const [quantity, setQuantity] = useState(1);
   const [categories, setCategories] = useState([]);
   const [woods, setWoods] = useState([]);
-  const [image1, setImage1] = useState(null);
-  const [image2, setImage2] = useState(null);
-  const [image3, setImage3] = useState(null);
-  const [image4, setImage4] = useState(null);
+  const [image1, setImage1] = useState("");
+  const [image2, setImage2] = useState("");
+  const [image3, setImage3] = useState("");
+  const [image4, setImage4] = useState("");
+
+  // New state variables for custom options
+  const [color, setColor] = useState("");
+  const [coating, setCoating] = useState("");
+  const [numberOfDrawers, setNumberOfDrawers] = useState("");
+  const [numberOfCabinets, setNumberOfCabinets] = useState("");
+  const [handleType, setHandleType] = useState("");
+  const [legStyle, setLegStyle] = useState("");
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -31,6 +41,13 @@ const CustomProduct = () => {
     zipcode: "",
     phone: "",
   });
+
+  const handleImageChange = (e, setImage) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImage(file);
+    }
+  };
 
   const onChangeHandler = (e) => {
     setFormData({
@@ -93,10 +110,6 @@ const CustomProduct = () => {
     setPrice(basePrice.toFixed(2));
   };
 
-  const handleImageChange = (e, setImage) => {
-    setImage(e.target.files[0]);
-  };
-
   const onSubmitHandler = async (e) => {
     e.preventDefault();
 
@@ -129,31 +142,71 @@ const CustomProduct = () => {
       const selectedCategory = categories.find((c) => c._id === category);
       const selectedWood = woods.find((w) => w._id === wood);
 
-      const orderItems = [
-        {
-          name: description,
-          category: selectedCategory.name,
-          wood: selectedWood.name,
-          length: Number(length),
-          breadth: Number(breadth),
-          height: Number(height),
-          image: image1 ? URL.createObjectURL(image1) : null,
-          quantity: Number(quantity),
-          price: Number(price),
-        },
-      ];
+      const uploadedImages = [];
+      for (const imageFile of [image1, image2, image3, image4]) {
+        if (imageFile) {
+          const url = await uploadImage(imageFile);
+          if (url && typeof url === "string") uploadedImages.push(url);
+        }
+      }
+
+      // Log uploaded images
+      console.log("Uploaded Images:", uploadedImages);
+
+      // Ensure all required fields are present and valid
+      if (
+        !description ||
+        !selectedCategory ||
+        !selectedWood ||
+        !length ||
+        !breadth ||
+        !height ||
+        !price
+      ) {
+        throw new Error("Missing required fields");
+      }
+
+      const orderItem = {
+        name: description,
+        category: selectedCategory.name,
+        wood: selectedWood.name,
+        length: Number(length),
+        breadth: Number(breadth),
+        height: Number(height),
+        images: uploadedImages, // Send all images as an array
+        quantity: Number(quantity),
+        price: Number(price),
+        isCustom: true,
+      };
+
+      // Only add optional fields if they have values
+      if (color) orderItem.color = color;
+      if (coating) orderItem.coating = coating;
+      if (numberOfDrawers) orderItem.numberOfDrawers = Number(numberOfDrawers);
+      if (numberOfCabinets)
+        orderItem.numberOfCabinets = Number(numberOfCabinets);
+      if (handleType) orderItem.handleType = handleType;
+      if (legStyle) orderItem.legStyle = legStyle;
+
+      const orderItems = [orderItem];
+
+      console.log(orderItems);
 
       // Calculate total amount without delivery fee
       const totalAmount = Number(price) * Number(quantity);
 
+      // Validate the final data structure
       const orderData = {
         items: orderItems,
         address: formData,
         amount: totalAmount,
       };
 
+      // Log the exact data being sent
+      console.log("Order Data being sent:", JSON.stringify(orderData, null, 2));
+
       const response = await axios.post(
-        `${backendUrl}/api/order/physical`,
+        `${backendUrl}/api/order/custom`,
         orderData,
         {
           headers: {
@@ -166,10 +219,10 @@ const CustomProduct = () => {
       if (response.data.success) {
         toast.success(response.data.message);
         setDescription("");
-        setImage1(null);
-        setImage2(null);
-        setImage3(null);
-        setImage4(null);
+        setImage1("");
+        setImage2("");
+        setImage3("");
+        setImage4("");
         setCategory("");
         setwood("");
         setLength("");
@@ -177,6 +230,12 @@ const CustomProduct = () => {
         setHeight("");
         setPrice("");
         setQuantity(1);
+        setColor("");
+        setCoating("");
+        setNumberOfDrawers("");
+        setNumberOfCabinets("");
+        setHandleType("");
+        setLegStyle("");
         setFormData({
           firstName: "",
           lastName: "",
@@ -192,7 +251,12 @@ const CustomProduct = () => {
         toast.error(response.data.message);
       }
     } catch (error) {
-      console.error("Error in form submission:", error.response?.data || error);
+      console.error("Full error response:", error.response);
+      console.error("Error details:", {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+      });
       toast.error(error.response?.data?.message || error.message);
     }
   };
@@ -217,38 +281,48 @@ const CustomProduct = () => {
                   id: "image1",
                   image: image1,
                   setImage: setImage1,
+                  preview: image1
+                    ? URL.createObjectURL(image1)
+                    : assets.upload_area,
                 },
                 {
                   id: "image2",
                   image: image2,
                   setImage: setImage2,
+                  preview: image2
+                    ? URL.createObjectURL(image2)
+                    : assets.upload_area,
                 },
                 {
                   id: "image3",
                   image: image3,
                   setImage: setImage3,
+                  preview: image3
+                    ? URL.createObjectURL(image3)
+                    : assets.upload_area,
                 },
                 {
                   id: "image4",
                   image: image4,
                   setImage: setImage4,
+                  preview: image4
+                    ? URL.createObjectURL(image4)
+                    : assets.upload_area,
                 },
-              ].map(({ id, image, setImage }) => (
+              ].map(({ id, image, setImage, preview }) => (
                 <div key={id} className="flex flex-col items-center">
                   <label htmlFor={id} className="cursor-pointer">
                     <img
                       className="w-[150px] h-[150px] object-cover border rounded-lg"
-                      src={
-                        !image ? assets.upload_area : URL.createObjectURL(image)
-                      }
+                      src={preview}
                       alt={id}
                     />
-                    {/* <p className="text-sm text-center mt-2">{label}</p> */}
                     <input
                       onChange={(e) => handleImageChange(e, setImage)}
                       type="file"
                       id={id}
                       hidden
+                      accept="image/*"
                     />
                   </label>
                 </div>
@@ -266,6 +340,84 @@ const CustomProduct = () => {
               placeholder="Enter product description"
               required
             />
+          </div>
+
+          {/* New Customization Fields */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Color (Wood Finish/Paint)
+              </label>
+              <input
+                type="text"
+                value={color}
+                onChange={(e) => setColor(e.target.value)}
+                placeholder="E.g., Walnut, White"
+                className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Coating
+              </label>
+              <input
+                type="text"
+                value={coating}
+                onChange={(e) => setCoating(e.target.value)}
+                placeholder="E.g., Matte, Glossy, Waterproof"
+                className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Number of Drawers
+              </label>
+              <input
+                type="number"
+                value={numberOfDrawers}
+                onChange={(e) => setNumberOfDrawers(e.target.value)}
+                placeholder="E.g., 2"
+                className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+                min="0"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Number of Cabinets
+              </label>
+              <input
+                type="number"
+                value={numberOfCabinets}
+                onChange={(e) => setNumberOfCabinets(e.target.value)}
+                placeholder="E.g., 1"
+                className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+                min="0"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Handle Type
+              </label>
+              <input
+                type="text"
+                value={handleType}
+                onChange={(e) => setHandleType(e.target.value)}
+                placeholder="E.g., Brass, Steel, None"
+                className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Leg Style
+              </label>
+              <input
+                type="text"
+                value={legStyle}
+                onChange={(e) => setLegStyle(e.target.value)}
+                placeholder="E.g., Tapered, Turned, Block"
+                className="mt-1 block w-full p-2 border rounded-md shadow-sm"
+              />
+            </div>
           </div>
 
           {/* Category & Wood Selection */}

@@ -29,7 +29,7 @@ const Orders = () => {
 
       // Add status filter if selected
       if (filters.status) {
-        params.append("status", filters.status);
+        params.append("status", filters.status.toLowerCase());
       }
       // Add payment status filter if selected
       if (filters.paymentStatus) {
@@ -57,8 +57,8 @@ const Orders = () => {
   };
 
   useEffect(() => {
-    fetchOrders();
-  }, [backendUrl, token, currentPage, filters]);
+    fetchOrders(currentPage);
+  }, [backendUrl, token, currentPage, filters.status, filters.paymentStatus]);
 
   const handleFilterChange = (type, value) => {
     setFilters((prev) => ({
@@ -113,6 +113,16 @@ const Orders = () => {
                   }`}
                 >
                   Pending
+                </button>
+                <button
+                  onClick={() => handleFilterChange("status", "approved")}
+                  className={`px-3 py-1.5 rounded-md text-sm ${
+                    filters.status === "approved"
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                >
+                  Approved
                 </button>
                 <button
                   onClick={() => handleFilterChange("status", "processing")}
@@ -223,9 +233,14 @@ const Orders = () => {
                       className="bg-white rounded-lg shadow-sm p-6 space-y-4"
                     >
                       <div className="flex justify-between items-center">
-                        <p className="text-lg font-semibold text-gray-900">
-                          Order ID: {order._id}
-                        </p>
+                        <div>
+                          <p className="text-lg font-semibold text-gray-900">
+                            Order ID: {order._id}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            Date: {new Date(order.date).toLocaleDateString()}
+                          </p>
+                        </div>
                         <div className="flex gap-2">
                           {(order.status === "approved" ||
                             order.status === "processing") && (
@@ -247,109 +262,252 @@ const Orders = () => {
                               Pay Now
                             </button>
                           )}
-
-                          {order.status !== "cancelled" &&
-                            order.status !== "delivered" && (
-                              <button
-                                onClick={() => cancelOrder(order._id)}
-                                className="bg-red-500 text-white px-3 py-1.5 rounded-md text-sm hover:bg-red-600"
-                              >
-                                Cancel Order
-                              </button>
-                            )}
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <p className="text-gray-600">
-                            Order Date:{" "}
-                            {new Date(order.createdAt).toLocaleString()}
-                          </p>
-                          <p className="text-gray-600">
-                            Status:{" "}
-                            <span className="capitalize font-medium">
-                              {order.status}
-                            </span>
-                          </p>
-                          <p className="text-gray-600">
-                            Payment Status:{" "}
-                            <span
-                              className={`font-medium ${
-                                order.paymentStatus.toLowerCase() === "pending"
-                                  ? "text-yellow-600"
-                                  : order.paymentStatus.toLowerCase() ===
-                                    "partial"
-                                  ? "text-orange-500"
-                                  : "text-green-600"
-                              }`}
+                          {order.status === "pending" && (
+                            <button
+                              onClick={() => cancelOrder(order._id)}
+                              className="bg-red-500 text-white px-3 py-1.5 rounded-md text-sm hover:bg-red-600"
                             >
-                              {order.paymentStatus}
-                            </span>
-                          </p>
-                        </div>
-
-                        <div className="space-y-2">
-                          <p className="text-gray-600">
-                            Paid: {currency}
-                            {Number(order.payment || 0).toFixed(2)} / {currency}
-                            {Number(order.amount).toFixed(2)}
-                          </p>
-                          {remaining > 0 && (
-                            <p className="text-sm text-red-600">
-                              Remaining: {currency}
-                              {remaining.toFixed(2)}
-                            </p>
+                              Cancel Order
+                            </button>
                           )}
-                          <p className="font-semibold text-lg text-gray-900">
-                            Total: {currency}
-                            {Number(order.amount || 0).toFixed(2)}
+                        </div>
+                      </div>
+
+                      {/* Order Status and Payment Info */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">
+                            Status
+                          </p>
+                          <p
+                            className={`text-sm font-semibold ${
+                              order.status === "pending"
+                                ? "text-yellow-600"
+                                : order.status === "approved"
+                                ? "text-blue-600"
+                                : order.status === "processing"
+                                ? "text-purple-600"
+                                : order.status === "delivered"
+                                ? "text-green-600"
+                                : "text-red-600"
+                            }`}
+                          >
+                            {order.status.charAt(0).toUpperCase() +
+                              order.status.slice(1)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-gray-500">
+                            Payment Status
+                          </p>
+                          <p
+                            className={`text-sm font-semibold ${
+                              order.paymentStatus === "Pending"
+                                ? "text-yellow-600"
+                                : order.paymentStatus === "Partial"
+                                ? "text-orange-600"
+                                : "text-green-600"
+                            }`}
+                          >
+                            {order.paymentStatus}
                           </p>
                         </div>
                       </div>
 
-                      {/* Address Info */}
-                      <div className="text-sm text-gray-700 space-y-1">
-                        <p>
-                          Customer: {order.address.firstName}{" "}
-                          {order.address.lastName}
-                        </p>
-                        <p>Email: {order.address.email}</p>
-                        <p>Phone: {order.address.phone}</p>
-                        <p>
-                          Address: {order.address.street}, {order.address.city},{" "}
-                          {order.address.province} {order.address.zipcode}
-                        </p>
-                      </div>
-
-                      {/* Items */}
-                      <div className="flex overflow-x-auto gap-4 pt-4">
+                      {/* Order Items */}
+                      <div className="space-y-4">
+                        <h3 className="font-medium text-gray-900">
+                          Order Items
+                        </h3>
                         {order.items.map((item, index) => (
                           <div
                             key={index}
-                            className="min-w-[200px] flex-shrink-0 border rounded-lg p-4 shadow-sm"
+                            className="border rounded-lg p-4 space-y-2"
                           >
-                            <img
-                              src={item.image}
-                              alt={item.name}
-                              className="w-full h-32 object-cover rounded"
-                            />
-                            <p className="font-semibold mt-2">{item.name}</p>
-                            <p className="text-sm text-gray-600">
-                              Wood: {item.wood}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              Size: {item.length}x{item.breadth}x{item.height}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              Qty: {item.quantity}
-                            </p>
-                            <p className="text-sm font-medium mt-1">
-                              Price: {currency}
-                              {item.price}
-                            </p>
+                            <div className="flex justify-between">
+                              <div className="flex gap-4">
+                                {item.images &&
+                                Array.isArray(item.images) &&
+                                item.images.length > 0 ? (
+                                  <img
+                                    src={item.images[0]}
+                                    alt={`${
+                                      item.name || "Custom Item"
+                                    } - Image 1`}
+                                    className="w-24 h-24 object-cover rounded-lg"
+                                  />
+                                ) : item.image ? (
+                                  <img
+                                    src={item.image}
+                                    alt={item.name || "Custom Item"}
+                                    className="w-24 h-24 object-cover rounded-lg"
+                                  />
+                                ) : null}
+                                <div>
+                                  <p className="font-medium">
+                                    {item.name || "Custom Item"}
+                                  </p>
+                                  <p className="text-sm text-gray-500">
+                                    Category: {item.category}
+                                  </p>
+                                  <p className="text-sm text-gray-500">
+                                    Wood Type: {item.wood}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-medium">
+                                  {currency} {item.price}
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                  Qty: {item.quantity}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Custom Order Details */}
+                            {item.isCustom && (
+                              <div className="mt-2 pt-2 border-t">
+                                <p className="text-sm font-medium text-gray-700">
+                                  Custom Details:
+                                </p>
+                                <div className="grid grid-cols-2 gap-2 mt-1">
+                                  {item.length !== 0 &&
+                                    item.breadth !== 0 &&
+                                    item.height !== 0 && (
+                                      <div>
+                                        <p className="text-sm text-gray-500">
+                                          Dimensions:
+                                        </p>
+                                        <p className="text-sm">
+                                          {item.length} x {item.breadth} x{" "}
+                                          {item.height}
+                                        </p>
+                                      </div>
+                                    )}
+                                  {item.color &&
+                                    item.color.trim() !== "" &&
+                                    item.color !== "0" && (
+                                      <div>
+                                        <p className="text-sm text-gray-500">
+                                          Color:
+                                        </p>
+                                        <p className="text-sm">{item.color}</p>
+                                      </div>
+                                    )}
+                                  {item.coating &&
+                                    item.coating.trim() !== "" &&
+                                    item.coating !== "0" && (
+                                      <div>
+                                        <p className="text-sm text-gray-500">
+                                          Coating:
+                                        </p>
+                                        <p className="text-sm">
+                                          {item.coating}
+                                        </p>
+                                      </div>
+                                    )}
+                                  {item.numberOfDrawers !== 0 && (
+                                    <div>
+                                      <p className="text-sm text-gray-500">
+                                        Drawers:
+                                      </p>
+                                      <p className="text-sm">
+                                        {item.numberOfDrawers}
+                                      </p>
+                                    </div>
+                                  )}
+                                  {item.numberOfCabinets !== 0 && (
+                                    <div>
+                                      <p className="text-sm text-gray-500">
+                                        Cabinets:
+                                      </p>
+                                      <p className="text-sm">
+                                        {item.numberOfCabinets}
+                                      </p>
+                                    </div>
+                                  )}
+                                  {item.handleType &&
+                                    item.handleType.trim() !== "" &&
+                                    item.handleType !== "0" && (
+                                      <div>
+                                        <p className="text-sm text-gray-500">
+                                          Handle Type:
+                                        </p>
+                                        <p className="text-sm">
+                                          {item.handleType}
+                                        </p>
+                                      </div>
+                                    )}
+                                  {item.legStyle &&
+                                    item.legStyle.trim() !== "" &&
+                                    item.legStyle !== "0" && (
+                                      <div>
+                                        <p className="text-sm text-gray-500">
+                                          Leg Style:
+                                        </p>
+                                        <p className="text-sm">
+                                          {item.legStyle}
+                                        </p>
+                                      </div>
+                                    )}
+                                </div>
+                                {item.description &&
+                                  item.description.trim() !== "" && (
+                                    <div className="mt-2">
+                                      <p className="text-sm text-gray-500">
+                                        Description:
+                                      </p>
+                                      <p className="text-sm">
+                                        {item.description}
+                                      </p>
+                                    </div>
+                                  )}
+                              </div>
+                            )}
                           </div>
                         ))}
+                      </div>
+
+                      {/* Order Summary */}
+                      <div className="border-t pt-4">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="text-sm font-medium text-gray-500">
+                              Total Amount
+                            </p>
+                            <p className="text-lg font-semibold">
+                              {currency} {order.amount}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-500">
+                              Payment Made
+                            </p>
+                            <p className="text-lg font-semibold">
+                              {currency} {order.payment || 0}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-gray-500">
+                              Remaining
+                            </p>
+                            <p className="text-lg font-semibold">
+                              {currency} {order.amount - (order.payment || 0)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Delivery Address */}
+                      <div className="border-t pt-4">
+                        <p className="text-sm font-medium text-gray-500">
+                          Delivery Address
+                        </p>
+                        <p className="text-sm">
+                          {order.address.street}, {order.address.city},{" "}
+                          {order.address.zipcode}
+                        </p>
                       </div>
                     </div>
                   );
