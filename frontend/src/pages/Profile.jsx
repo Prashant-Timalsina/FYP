@@ -12,6 +12,7 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [orderCount, setOrderCount] = useState(0);
   const itemsPerPage = 6;
 
   useEffect(() => {
@@ -32,8 +33,22 @@ const Profile = () => {
       }
     };
 
+    const fetchUserOrders = async () => {
+      try {
+        const response = await axios.get(`${backendUrl}/api/order/myorder`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.data.success) {
+          setOrderCount(response.data.totalOrders);
+        }
+      } catch (err) {
+        console.error("Error fetching user orders:", err);
+      }
+    };
+
     fetchUserData();
-  }, [token]);
+    fetchUserOrders();
+  }, [token, backendUrl]);
 
   const handleRemoveFromFavorites = (productId) => {
     if (
@@ -106,7 +121,9 @@ const Profile = () => {
                 <div className="w-full border-t border-gray-200 pt-4">
                   <div className="grid grid-cols-2 gap-4 text-center">
                     <div>
-                      <p className="text-2xl font-bold text-primary">0</p>
+                      <p className="text-2xl font-bold text-primary">
+                        {orderCount}
+                      </p>
                       <p className="text-sm text-gray-500">Orders</p>
                     </div>
                     <div>

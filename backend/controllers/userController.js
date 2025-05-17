@@ -403,3 +403,55 @@ export const resetPassword = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+// Update user role (admin <-> user, superadmin can demote admin)
+export const updateUserRole = async (req, res) => {
+  try {
+    const { id } = req.params; // Target user ID
+    const actingRole = req.user.role; // Use token role
+    const user = await userModel.findById(id);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+    // Prevent changing superadmin (if ever present)
+    if (user.role === "superadmin") {
+      return res
+        .status(403)
+        .json({ success: false, message: "Cannot change superadmin role." });
+    }
+    // If user is admin, only superadmin can demote to user
+    if (user.role === "admin") {
+      if (actingRole !== "superadmin") {
+        return res.status(403).json({
+          success: false,
+          message: "Only superadmin can demote admin to user.",
+        });
+      }
+      user.role = "user";
+    } else if (user.role === "user") {
+      // Both admin and superadmin can promote user to admin
+      if (actingRole !== "admin" && actingRole !== "superadmin") {
+        return res.status(403).json({
+          success: false,
+          message: "Not authorized to promote user to admin.",
+        });
+      }
+      user.role = "admin";
+    } else {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid role switch." });
+    }
+    await user.save();
+    return res.status(200).json({
+      success: true,
+      message: `User role updated to ${user.role}.`,
+      user,
+    });
+  } catch (error) {
+    console.error("Error updating user role:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+};

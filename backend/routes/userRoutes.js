@@ -10,6 +10,7 @@ import {
   resetPassword,
   userData,
   verifyUser,
+  updateUserRole,
 } from "../controllers/userController.js"; // Import the user controller
 import authUser from "../middlewares/UserAuth.js";
 import adminAuth from "../middlewares/AdminAuth.js";
@@ -31,15 +32,18 @@ userRouter.get("/list", adminAuth, getAllUsers);
 userRouter.get("/single/me", authUser, userData);
 
 // Route to delete a user by ID (requires authentication)
-userRouter.delete("/remove/:id", deleteUser);
+userRouter.delete("/remove/:id", [authUser, adminAuth], deleteUser);
 
 // Route to update a user (requires authentication)
-userRouter.put("/update", authUser, updateUser);
+userRouter.put("/update", [authUser, adminAuth], updateUser);
 
 // Route to request a password reset (send reset email)
 userRouter.post("/forgot-password", requestPasswordReset);
 
 // Route to reset the password using the token
 userRouter.post("/reset-password", resetPassword);
+
+// Route to update user role (admin <-> user, superadmin can demote admin)
+userRouter.put("/updaterole/:id", adminAuth, updateUserRole);
 
 export default userRouter;

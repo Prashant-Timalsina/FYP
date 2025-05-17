@@ -6,44 +6,38 @@ import upload from "../middlewares/multer.js";
 import {
   allOrders,
   cancelOrder,
-  // cancelOrder,
-  createOrder,
   getOrderById,
   placeOrder,
-  placeOrderOnline,
   placeCustomOrder,
   updatePaymentStatus,
-  // placeOrderESewa,
   updateStatus,
   userOrders,
-  // verifyESewaPayment,
 } from "../controllers/orderController.js";
 
 const orderRouter = express.Router();
 
-//Admin permissions
+// Admin routes
 orderRouter.get("/all", adminAuth, allOrders);
-orderRouter.put("/status", updateStatus);
-orderRouter.put("/cancel", cancelOrder);
+orderRouter.put("/status", adminAuth, updateStatus);
 
-// user tasks
-orderRouter.put("new-order", authUser, createOrder);
-
+// User routes
 orderRouter.post("/physical", authUser, placeOrder);
-
-// orderRouter.post("/online", authUser, placeOrderESewa);
-orderRouter.post("/online", authUser, placeOrderOnline);
 orderRouter.post(
   "/custom",
   authUser,
-  upload.array("image", 4),
+  upload.fields([
+    { name: "image1", maxCount: 1 },
+    { name: "image2", maxCount: 1 },
+    { name: "image3", maxCount: 1 },
+    { name: "image4", maxCount: 1 },
+  ]),
   placeCustomOrder
 );
-// orderRouter.get("/verify-esewa", verifyESewaPayment);
-
 orderRouter.get("/myorder", authUser, userOrders);
 orderRouter.put("/payment", authUser, updatePaymentStatus);
+orderRouter.put("/cancel", authUser, cancelOrder);
 
-orderRouter.get("/:id", authUser, getOrderById);
+// Shared routes (accessible by both users and admins)
+orderRouter.get("/:id", [authUser, adminAuth], getOrderById);
 
 export default orderRouter;

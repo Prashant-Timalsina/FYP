@@ -1,7 +1,9 @@
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState, useContext, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router";
 import axios from "axios";
 import { ShopContext } from "../context/ShopContext";
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
 
 const PaymentSuccess = () => {
   const [search] = useSearchParams();
@@ -10,6 +12,7 @@ const PaymentSuccess = () => {
   const [orderDetails, setOrderDetails] = useState(null);
   const navigate = useNavigate();
   const { token, backendUrl } = useContext(ShopContext);
+  const receiptRef = useRef();
 
   useEffect(() => {
     const resData = atob(dataQuery);
@@ -96,53 +99,122 @@ const PaymentSuccess = () => {
     updatePayment();
   }, [search, token, backendUrl, navigate]);
 
+  const handleDownloadPdf = () => {
+    if (!orderDetails) return;
+
+    const input = receiptRef.current;
+    const visibleWidth = input.offsetWidth;
+    const visibleHeight = input.offsetHeight;
+    const scaleFactor = 0.5;
+
+    html2canvas(input, {
+      scale: 2,
+      useCORS: true,
+    })
+      .then((canvas) => {
+        const imgData = canvas.toDataURL("image/png");
+
+        const pdfWidth = visibleWidth * scaleFactor;
+        const pdfHeight = visibleHeight * scaleFactor;
+
+        const pdf = new jsPDF({
+          orientation: pdfWidth > pdfHeight ? "landscape" : "portrait",
+          unit: "px",
+          format: [pdfWidth, pdfHeight],
+        });
+
+        pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+
+        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+        pdf.save(`TimberCraft-${timestamp}.pdf`);
+      })
+      .catch((err) => {
+        console.error("Error generating PDF:", err);
+      });
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
-        <div className="text-center mb-6">
-          <img
-            src="src/check.png"
-            alt="Success"
-            className="w-20 h-20 mx-auto mb-4"
-          />
-          <h1 className="text-2xl font-semibold text-green-600 mb-2">
-            Payment Successful
-          </h1>
-        </div>
-
-        <div className="space-y-4">
-          <div className="bg-gray-50 p-4 rounded-md">
-            <p className="text-gray-600">
-              <span className="font-medium">Order ID:</span> {data.orderId}
-            </p>
-            <p className="text-gray-600">
-              <span className="font-medium">Amount Paid:</span> Rs.{" "}
-              {data.total_amount}
-            </p>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <div className="bg-white p-8 rounded-lg shadow-xl max-w-lg w-full space-y-8">
+        <div ref={receiptRef} className="p-6 border rounded-lg bg-slate-50">
+          {" "}
+          {/* Added ref and some padding */}
+          <div className="text-center mb-6">
+            <img
+              src="/src/assets/check.png" // Assuming check.png is in public or accessible path
+              alt="Success"
+              className="w-20 h-20 mx-auto mb-4"
+            />
+            <h1 className="text-3xl font-bold text-green-600 mb-2">
+              Payment Successful
+            </h1>
+            <p className="text-gray-700">Thank you for your purchase!</p>
           </div>
-
-          {orderDetails && (
-            <div className="bg-gray-50 p-4 rounded-md">
-              <p className="text-gray-600">
-                <span className="font-medium">Total Order Amount:</span> Rs.{" "}
-                {orderDetails.amount}
+          <div className="space-y-4">
+            <div className="bg-gray-100 p-4 rounded-md shadow-sm">
+              <h2 className="text-lg font-semibold text-gray-800 mb-2">
+                Transaction Details
+              </h2>
+              <p className="text-gray-700">
+                <span className="font-medium">Order ID:</span> {data.orderId}
               </p>
-              <p className="text-gray-600">
-                <span className="font-medium">Total Paid:</span> Rs.{" "}
-                {orderDetails.payment}
-              </p>
-              <p className="text-gray-600">
-                <span className="font-medium">Remaining Amount:</span> Rs.{" "}
-                {(orderDetails.amount - orderDetails.payment).toFixed(2)}
+              <p className="text-gray-700">
+                <span className="font-medium">
+                  Amount Paid (This Transaction):
+                </span>{" "}
+                Rs. {data.total_amount}
               </p>
             </div>
-          )}
 
+            {orderDetails && (
+              <div className="bg-gray-100 p-4 rounded-md shadow-sm">
+                <h2 className="text-lg font-semibold text-gray-800 mb-2">
+                  Order Summary
+                </h2>
+                <p className="text-gray-700">
+                  <span className="font-medium">Total Order Amount:</span> Rs.{" "}
+                  {orderDetails.amount.toFixed(2)}
+                </p>
+                <p className="text-gray-700">
+                  <span className="font-medium">
+                    Total Paid (All Transactions):
+                  </span>{" "}
+                  Rs. {orderDetails.payment.toFixed(2)}
+                </p>
+                <p className="text-gray-700">
+                  <span className="font-medium">Remaining Amount:</span> Rs.{" "}
+                  {(orderDetails.amount - orderDetails.payment).toFixed(2)}
+                </p>
+
+                {/* Placeholder for Order Item Details */}
+                {/* We can expand this later if needed */}
+                {/* <div className="mt-4">
+                  <h3 className="text-md font-semibold text-gray-800 mb-1">Items:</h3>
+                  {orderDetails.items && orderDetails.items.map((item, index) => (
+                    <div key={index} className="text-sm text-gray-600">
+                      - {item.name} (Qty: {item.quantity})
+                    </div>
+                  ))}
+                </div> */}
+              </div>
+            )}
+          </div>
+        </div>{" "}
+        {/* End of receiptRef div */}
+        <div className="mt-6 flex flex-col space-y-3">
+          {orderDetails && (
+            <button
+              onClick={handleDownloadPdf}
+              className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-md transition duration-200 ease-in-out shadow-md"
+            >
+              Download Receipt (PDF)
+            </button>
+          )}
           <button
             onClick={() => navigate("/orders")}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-md transition duration-200"
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-md transition duration-200 ease-in-out shadow-md"
           >
-            View Orders
+            View All Orders
           </button>
         </div>
       </div>
