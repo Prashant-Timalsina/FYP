@@ -70,6 +70,30 @@ const Orders = () => {
 
   const cancelOrder = async (orderId) => {
     try {
+      // Get the order details first
+      const orderResponse = await axios.get(
+        `${backendUrl}/api/order/${orderId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!orderResponse.data.success) {
+        throw new Error("Failed to fetch order details");
+      }
+
+      const order = orderResponse.data.order;
+
+      // Show warning for processing orders
+      if (order.status === "processing") {
+        const nonRefundableAmount = Number((order.amount * 0.2).toFixed(2));
+        const confirmMessage = `Warning: This order is in processing status. If cancelled, 20% of the total amount (${currency} ${nonRefundableAmount}) will not be refunded. Do you want to proceed with cancellation?`;
+
+        if (!window.confirm(confirmMessage)) {
+          return; // User cancelled the confirmation
+        }
+      }
+
       const response = await axios.put(
         `${backendUrl}/api/order/cancel`,
         { orderId },
@@ -230,7 +254,7 @@ const Orders = () => {
                   return (
                     <div
                       key={order._id}
-                      className="bg-white rounded-lg shadow-sm p-6 space-y-4"
+                      className="bg-white rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300 p-6 space-y-4"
                     >
                       <div className="flex justify-between items-center">
                         <div>
@@ -243,33 +267,32 @@ const Orders = () => {
                         </div>
                         <div className="flex gap-2">
                           {(order.status === "approved" ||
-                            order.status === "processing") && (
-                            <button
-                              onClick={() => {
-                                const paymentData = {
-                                  amount: remaining,
-                                  totalAmount: order.amount,
-                                  orderId: order._id,
-                                  success_url:
-                                    "http://localhost:5173/payment-success",
-                                  failure_url:
-                                    "http://localhost:5173/payment-failure",
-                                };
-                                navigate("/payment", { state: paymentData });
-                              }}
-                              className="bg-green-500 text-white px-3 py-1.5 rounded-md text-sm hover:bg-green-600"
-                            >
-                              Pay Now
-                            </button>
-                          )}
-                          {order.status === "pending" && (
-                            <button
-                              onClick={() => cancelOrder(order._id)}
-                              className="bg-red-500 text-white px-3 py-1.5 rounded-md text-sm hover:bg-red-600"
-                            >
-                              Cancel Order
-                            </button>
-                          )}
+                            order.status === "processing") &&
+                            (order.paymentStatus === "Pending" ||
+                              order.paymentStatus === "Partial") && (
+                              <button
+                                onClick={() => {
+                                  const paymentData = {
+                                    amount: remaining,
+                                    totalAmount: order.amount,
+                                    orderId: order._id,
+                                  };
+                                  navigate("/payment", { state: paymentData });
+                                }}
+                                className="bg-green-500 text-white px-3 py-1.5 rounded-md text-sm hover:bg-green-600"
+                              >
+                                Pay Now
+                              </button>
+                            )}
+                          {order.status !== "delivered" &&
+                            order.status !== "cancelled" && (
+                              <button
+                                onClick={() => cancelOrder(order._id)}
+                                className="bg-red-500 text-white px-3 py-1.5 rounded-md text-sm hover:bg-red-600"
+                              >
+                                Cancel Order
+                              </button>
+                            )}
                         </div>
                       </div>
 
@@ -326,23 +349,30 @@ const Orders = () => {
                           >
                             <div className="flex justify-between">
                               <div className="flex gap-4">
-                                {item.images &&
-                                Array.isArray(item.images) &&
-                                item.images.length > 0 ? (
+                                {item.isCustom &&
+                                item.image &&
+                                Array.isArray(item.image) &&
+                                item.image.length > 0 ? (
                                   <img
-                                    src={item.images[0]}
+                                    src={item.image[0]}
                                     alt={`${
                                       item.name || "Custom Item"
                                     } - Image 1`}
-                                    className="w-24 h-24 object-cover rounded-lg"
+                                    className="w-24 h-24 object-cover rounded-lg shadow-sm"
                                   />
-                                ) : item.image ? (
+                                ) : !item.isCustom && item.image ? (
                                   <img
                                     src={item.image}
-                                    alt={item.name || "Custom Item"}
-                                    className="w-24 h-24 object-cover rounded-lg"
+                                    alt={item.name || "Product"}
+                                    className="w-24 h-24 object-cover rounded-lg shadow-sm"
                                   />
-                                ) : null}
+                                ) : (
+                                  <div className="w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center">
+                                    <span className="text-gray-400">
+                                      No image
+                                    </span>
+                                  </div>
+                                )}
                                 <div>
                                   <p className="font-medium">
                                     {item.name || "Custom Item"}
@@ -477,7 +507,7 @@ const Orders = () => {
                               Total Amount
                             </p>
                             <p className="text-lg font-semibold">
-                              {currency} {order.amount}
+                              {currency} {Number(order.amount).toFixed(2)}
                             </p>
                           </div>
                           <div>
@@ -485,7 +515,7 @@ const Orders = () => {
                               Payment Made
                             </p>
                             <p className="text-lg font-semibold">
-                              {currency} {order.payment || 0}
+                              {currency} {Number(order.payment || 0).toFixed(2)}
                             </p>
                           </div>
                           <div>
@@ -493,7 +523,10 @@ const Orders = () => {
                               Remaining
                             </p>
                             <p className="text-lg font-semibold">
-                              {currency} {order.amount - (order.payment || 0)}
+                              {currency}{" "}
+                              {Number(
+                                order.amount - (order.payment || 0)
+                              ).toFixed(2)}
                             </p>
                           </div>
                         </div>

@@ -1,24 +1,30 @@
 import React, { useEffect, useState, useContext } from "react";
-import { FaTrash } from "react-icons/fa";
 import { assets } from "../assets/assets";
 import { AdminContext } from "../context/AdminContext";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const CategoryListTable = () => {
   const { backendUrl, navigate, token } = useContext(AdminContext);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Modal state
+  const [showModal, setShowModal] = useState(false);
+  const [productsUsing, setProductsUsing] = useState([]);
+  const [modalTitle, setModalTitle] = useState("");
+
   useEffect(() => {
     fetchCategories();
   }, []);
 
   const fetchCategories = async () => {
+    setLoading(true);
     try {
-      const response = await axios.get(`${backendUrl}/api/category/all`);
-      setCategories(response.data.categories);
+      const res = await axios.get(`${backendUrl}/api/category/all`);
+      setCategories(res.data.categories || []);
     } catch (error) {
-      console.error("Error fetching categories:", error);
+      toast.error("Failed to fetch categories");
     } finally {
       setLoading(false);
     }
@@ -29,6 +35,25 @@ const CategoryListTable = () => {
   };
 
   const handleDeleteCategory = async (id) => {
+    // Check if any product uses this category
+    try {
+      const response = await axios.get(`${backendUrl}/api/product/list`);
+      const products = response.data.products || [];
+      const usedProducts = products.filter(
+        (product) => product.category === id
+      );
+
+      if (usedProducts.length > 0) {
+        setProductsUsing(usedProducts);
+        setModalTitle("Cannot delete category. Products using this category:");
+        setShowModal(true);
+        return;
+      }
+    } catch (error) {
+      toast.error("Failed to check products for category");
+      return;
+    }
+
     if (window.confirm("Are you sure you want to delete this category?")) {
       try {
         const response = await axios.delete(
@@ -36,12 +61,10 @@ const CategoryListTable = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (response.data.success) {
-          setCategories((prevCategories) =>
-            prevCategories.filter((category) => category._id !== id)
-          );
+          setCategories((prev) => prev.filter((cat) => cat._id !== id));
         }
       } catch (error) {
-        console.error("Error deleting category:", error);
+        toast.error("Failed to delete category");
       }
     }
   };
@@ -140,6 +163,28 @@ const CategoryListTable = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg p-6 max-w-lg w-full">
+            <h2 className="text-lg font-semibold mb-4">{modalTitle}</h2>
+            <ul className="mb-4 max-h-60 overflow-y-auto">
+              {productsUsing.map((product) => (
+                <li key={product._id} className="mb-2">
+                  <span className="font-medium">{product.name}</span>
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={() => setShowModal(false)}
+              className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

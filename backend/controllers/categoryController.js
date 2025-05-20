@@ -101,22 +101,53 @@ export const updateCategory = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, description, price } = req.body;
-    console.log(price);
 
-    const image = req.files.image && req.files.image[0];
+    // Validate required fields
+    if (!name || !description || price === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, description, and price are required",
+      });
+    }
+
+    // Check for duplicate category name
+    const existingCategory = await Category.findOne({
+      name,
+      _id: { $ne: id },
+    });
+
+    if (existingCategory) {
+      return res.status(400).json({
+        success: false,
+        message: "Category name already exists",
+      });
+    }
+
+    // Handle image upload if provided
     let imageURL = null;
-    if (image) {
-      const result = await cloudinary.uploader.upload(image.path, {
+    if (req.files && req.files.image && req.files.image[0]) {
+      const result = await cloudinary.uploader.upload(req.files.image[0].path, {
         resource_type: "image",
       });
       imageURL = result.secure_url;
     }
 
-    const updatedCategory = await Category.findByIdAndUpdate(
-      id,
-      { name, description, price, image: imageURL },
-      { new: true, runValidators: true }
-    );
+    // Prepare update data
+    const updateData = {
+      name,
+      description,
+      price: Number(price),
+    };
+
+    // Only update image if a new one was uploaded
+    if (imageURL) {
+      updateData.image = imageURL;
+    }
+
+    const updatedCategory = await Category.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    });
 
     if (!updatedCategory) {
       return res.status(404).json({
@@ -131,6 +162,7 @@ export const updateCategory = async (req, res) => {
       category: updatedCategory,
     });
   } catch (error) {
+    console.error("Error updating category:", error);
     res.status(500).json({
       success: false,
       message: "Failed to update category",

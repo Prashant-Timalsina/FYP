@@ -8,8 +8,6 @@ import { AdminContext } from "../context/AdminContext";
 const AddWood = () => {
   const { backendUrl, navigate, token } = useContext(AdminContext);
   const [image1, setImage1] = useState(null);
-  const [image2, setImage2] = useState(null);
-  const [image3, setImage3] = useState(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [price, setPrice] = useState(0);
@@ -45,12 +43,10 @@ const AddWood = () => {
     formData.append("name", name);
     formData.append("description", description);
     formData.append("price", price);
-    formData.append("advantages", JSON.stringify(advantages)); // Send advantages as JSON array
+    formData.append("advantages", JSON.stringify(advantages));
 
-    // Append the images to the form data
+    // Append the image to the form data
     if (image1) formData.append("image1", image1);
-    if (image2) formData.append("image2", image2);
-    if (image3) formData.append("image3", image3);
 
     try {
       const response = await axios.post(
@@ -64,9 +60,7 @@ const AddWood = () => {
         setDescription("");
         setPrice(0);
         setAdvantages([""]);
-        setImage1(null);
-        setImage2(null);
-        setImage3(null); // Reset images after successful save
+        setImage1(null); // Reset image after successful save
         navigate("/add");
       } else {
         toast.error(response.data.message);
@@ -105,40 +99,6 @@ const AddWood = () => {
         </label>
       </div>
 
-      <div className="mb-4">
-        <label className="block mb-2">Wood Image 2</label>
-        <label htmlFor="woodImage2">
-          <img
-            className="w-20"
-            src={!image2 ? assets.upload_area : URL.createObjectURL(image2)}
-            alt="Upload"
-          />
-          <input
-            onChange={(e) => handleImageChange(e, setImage2)}
-            type="file"
-            id="woodImage2"
-            hidden
-          />
-        </label>
-      </div>
-
-      <div className="mb-4">
-        <label className="block mb-2">Wood Image 3</label>
-        <label htmlFor="woodImage3">
-          <img
-            className="w-20"
-            src={!image3 ? assets.upload_area : URL.createObjectURL(image3)}
-            alt="Upload"
-          />
-          <input
-            onChange={(e) => handleImageChange(e, setImage3)}
-            type="file"
-            id="woodImage3"
-            hidden
-          />
-        </label>
-      </div>
-
       {/* Wood name and description */}
       <div className="mb-4">
         <label className="block mb-2">Wood Name</label>
@@ -164,6 +124,7 @@ const AddWood = () => {
         <input
           type="number"
           value={price}
+          min={1}
           onChange={(e) => setPrice(e.target.value)}
           className="w-full px-3 py-2 border rounded-md"
           placeholder="Enter wood price"

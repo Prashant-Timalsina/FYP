@@ -97,6 +97,7 @@ const AddCategory = () => {
         <input
           type="number"
           value={price}
+          min={1}
           onChange={(e) => setPrice(e.target.value)}
           className="w-full px-3 py-2 border rounded-md"
           placeholder="Enter category price"

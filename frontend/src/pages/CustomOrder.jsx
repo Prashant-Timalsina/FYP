@@ -18,10 +18,14 @@ const CustomProduct = () => {
   const [quantity, setQuantity] = useState(1);
   const [categories, setCategories] = useState([]);
   const [woods, setWoods] = useState([]);
-  const [image1, setImage1] = useState("");
-  const [image2, setImage2] = useState("");
-  const [image3, setImage3] = useState("");
-  const [image4, setImage4] = useState("");
+  const [images, setImages] = useState([]);
+
+  // Show guest visit toast when no token
+  useEffect(() => {
+    if (!token) {
+      toast.info("Guest Visit ");
+    }
+  }, [token]);
 
   // New state variables for custom options
   const [color, setColor] = useState("");
@@ -42,11 +46,34 @@ const CustomProduct = () => {
     phone: "",
   });
 
-  const handleImageChange = (e, setImage) => {
+  const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setImage(file);
+      setImages((prevImages) => {
+        const newImages = [...prevImages];
+        // Find the first empty slot
+        const emptySlotIndex = newImages.findIndex((img) => !img);
+        if (emptySlotIndex !== -1) {
+          newImages[emptySlotIndex] = file;
+        } else if (newImages.length < 4) {
+          newImages.push(file);
+        }
+        return newImages;
+      });
     }
+  };
+
+  const removeImage = (index) => {
+    setImages((prevImages) => {
+      const newImages = [...prevImages];
+      newImages[index] = null;
+      // Shift remaining images to fill the gap
+      const filteredImages = newImages.filter((img) => img);
+      while (filteredImages.length < newImages.length) {
+        filteredImages.push(null);
+      }
+      return filteredImages;
+    });
   };
 
   const onChangeHandler = (e) => {
@@ -143,7 +170,7 @@ const CustomProduct = () => {
       const selectedWood = woods.find((w) => w._id === wood);
 
       const uploadedImages = [];
-      for (const imageFile of [image1, image2, image3, image4]) {
+      for (const imageFile of images) {
         if (imageFile) {
           const url = await uploadImage(imageFile);
           if (url && typeof url === "string") uploadedImages.push(url);
@@ -219,10 +246,7 @@ const CustomProduct = () => {
       if (response.data.success) {
         toast.success(response.data.message);
         setDescription("");
-        setImage1("");
-        setImage2("");
-        setImage3("");
-        setImage4("");
+        setImages([]);
         setCategory("");
         setwood("");
         setLength("");
@@ -276,55 +300,35 @@ const CustomProduct = () => {
           <div className="mb-4">
             <p className="mb-2">Upload Images (Design Reference only)</p>
             <div className="grid grid-cols-2 gap-4">
-              {[
-                {
-                  id: "image1",
-                  image: image1,
-                  setImage: setImage1,
-                  preview: image1
-                    ? URL.createObjectURL(image1)
-                    : assets.upload_area,
-                },
-                {
-                  id: "image2",
-                  image: image2,
-                  setImage: setImage2,
-                  preview: image2
-                    ? URL.createObjectURL(image2)
-                    : assets.upload_area,
-                },
-                {
-                  id: "image3",
-                  image: image3,
-                  setImage: setImage3,
-                  preview: image3
-                    ? URL.createObjectURL(image3)
-                    : assets.upload_area,
-                },
-                {
-                  id: "image4",
-                  image: image4,
-                  setImage: setImage4,
-                  preview: image4
-                    ? URL.createObjectURL(image4)
-                    : assets.upload_area,
-                },
-              ].map(({ id, image, setImage, preview }) => (
-                <div key={id} className="flex flex-col items-center">
-                  <label htmlFor={id} className="cursor-pointer">
+              {[0, 1, 2, 3].map((index) => (
+                <div key={index} className="flex flex-col items-center">
+                  <label htmlFor={`image${index}`} className="cursor-pointer">
                     <img
                       className="w-[150px] h-[150px] object-cover border rounded-lg"
-                      src={preview}
-                      alt={id}
+                      src={
+                        images[index]
+                          ? URL.createObjectURL(images[index])
+                          : assets.upload_area
+                      }
+                      alt={`Image ${index + 1}`}
                     />
                     <input
-                      onChange={(e) => handleImageChange(e, setImage)}
+                      onChange={handleImageChange}
                       type="file"
-                      id={id}
+                      id={`image${index}`}
                       hidden
                       accept="image/*"
                     />
                   </label>
+                  {images[index] && (
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="mt-2 px-2 py-1 text-sm text-red-600 hover:text-red-800"
+                    >
+                      Remove
+                    </button>
+                  )}
                 </div>
               ))}
             </div>

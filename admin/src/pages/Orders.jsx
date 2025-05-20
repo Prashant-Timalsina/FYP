@@ -19,6 +19,9 @@ const Orders = () => {
   const resultPerPage = 5;
   const navigate = useNavigate();
 
+  // Add new state for image carousel
+  const [activeImageIndex, setActiveImageIndex] = useState({});
+
   const fetchOrders = async (page = 1) => {
     try {
       setLoading(true);
@@ -99,6 +102,30 @@ const Orders = () => {
 
   const cancelOrder = async (orderId) => {
     try {
+      // Get the order details first
+      const orderResponse = await axios.get(
+        `${backendUrl}/api/order/${orderId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!orderResponse.data.success) {
+        throw new Error("Failed to fetch order details");
+      }
+
+      const order = orderResponse.data.order;
+
+      // Show warning for processing orders
+      if (order.status === "processing") {
+        const nonRefundableAmount = Number((order.amount * 0.2).toFixed(2));
+        const confirmMessage = `Warning: This order is in processing status. If cancelled, 20% of the total amount (${currency} ${nonRefundableAmount}) will not be refunded. Do you want to proceed with cancellation?`;
+
+        if (!window.confirm(confirmMessage)) {
+          return; // User cancelled the confirmation
+        }
+      }
+
       const response = await axios.put(
         `${backendUrl}/api/order/cancel`,
         { orderId },
@@ -156,6 +183,38 @@ const Orders = () => {
       const msg = err.response?.data?.message || "Failed to update payment.";
       toast.error(msg);
     }
+  };
+
+  // Function to handle next image
+  const handleNextImage = (itemId) => {
+    setActiveImageIndex((prev) => {
+      const currentIndex = prev[itemId] || 0;
+      const item = orders
+        .find((order) => order.items.find((item) => item._id === itemId))
+        ?.items.find((item) => item._id === itemId);
+
+      const totalImages = Array.isArray(item?.image) ? item.image.length : 1;
+      return {
+        ...prev,
+        [itemId]: (currentIndex + 1) % totalImages,
+      };
+    });
+  };
+
+  // Function to handle previous image
+  const handlePrevImage = (itemId) => {
+    setActiveImageIndex((prev) => {
+      const currentIndex = prev[itemId] || 0;
+      const item = orders
+        .find((order) => order.items.find((item) => item._id === itemId))
+        ?.items.find((item) => item._id === itemId);
+
+      const totalImages = Array.isArray(item?.image) ? item.image.length : 1;
+      return {
+        ...prev,
+        [itemId]: (currentIndex - 1 + totalImages) % totalImages,
+      };
+    });
   };
 
   return (
@@ -488,24 +547,74 @@ const Orders = () => {
                             className="min-w-[300px] flex-shrink-0 border rounded-lg p-4 shadow-sm space-y-2"
                           >
                             {/* Image display - handles single image or array */}
-                            <div className="flex justify-center mb-4">
-                              {item.images &&
-                              Array.isArray(item.images) &&
-                              item.images.length > 0 ? (
-                                <img
-                                  src={item.images[0]}
-                                  alt={`${
-                                    item.name || "Custom Item"
-                                  } - Image 1`}
-                                  className="w-full h-40 object-cover rounded"
-                                />
-                              ) : item.image ? (
-                                <img
-                                  src={item.image}
-                                  alt={item.name || "Custom Item"}
-                                  className="w-full h-40 object-cover rounded"
-                                />
-                              ) : null}
+                            <div className="flex justify-center mb-4 relative">
+                              {(() => {
+                                console.log("Item:", item);
+                                console.log("Image:", item.image);
+                                console.log(
+                                  "Is Array:",
+                                  Array.isArray(item.image)
+                                );
+                                console.log(
+                                  "Active Index:",
+                                  activeImageIndex[item._id]
+                                );
+
+                                return item.image ? (
+                                  <div className="relative w-full">
+                                    <img
+                                      src={
+                                        Array.isArray(item.image)
+                                          ? item.image[
+                                              activeImageIndex[item._id] || 0
+                                            ]
+                                          : item.image
+                                      }
+                                      alt={`${
+                                        item.name || "Custom Item"
+                                      } - Image ${
+                                        (activeImageIndex[item._id] || 0) + 1
+                                      }`}
+                                      className="w-full h-40 object-cover rounded"
+                                    />
+                                    {Array.isArray(item.image) &&
+                                      item.image.length > 1 && (
+                                        <>
+                                          <button
+                                            onClick={() =>
+                                              handlePrevImage(item._id)
+                                            }
+                                            className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-1 rounded-full hover:bg-opacity-75"
+                                          >
+                                            ←
+                                          </button>
+                                          <button
+                                            onClick={() =>
+                                              handleNextImage(item._id)
+                                            }
+                                            className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white p-1 rounded-full hover:bg-opacity-75"
+                                          >
+                                            →
+                                          </button>
+                                          <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 flex space-x-1">
+                                            {item.image.map((_, index) => (
+                                              <div
+                                                key={index}
+                                                className={`w-2 h-2 rounded-full ${
+                                                  index ===
+                                                  (activeImageIndex[item._id] ||
+                                                    0)
+                                                    ? "bg-white"
+                                                    : "bg-white bg-opacity-50"
+                                                }`}
+                                              />
+                                            ))}
+                                          </div>
+                                        </>
+                                      )}
+                                  </div>
+                                ) : null;
+                              })()}
                             </div>
 
                             {/* Basic and Custom Details in Inline Flex */}
@@ -658,7 +767,7 @@ const Orders = () => {
                               Total Amount
                             </p>
                             <p className="text-lg font-semibold">
-                              {currency} {order.amount}
+                              {currency} {Number(order.amount).toFixed(2)}
                             </p>
                           </div>
                           <div>
@@ -666,7 +775,7 @@ const Orders = () => {
                               Payment Made
                             </p>
                             <p className="text-lg font-semibold">
-                              {currency} {order.payment || 0}
+                              {currency} {Number(order.payment || 0).toFixed(2)}
                             </p>
                           </div>
                           <div>
@@ -674,7 +783,10 @@ const Orders = () => {
                               Remaining
                             </p>
                             <p className="text-lg font-semibold">
-                              {currency} {order.amount - (order.payment || 0)}
+                              {currency}{" "}
+                              {Number(
+                                order.amount - (order.payment || 0)
+                              ).toFixed(2)}
                             </p>
                           </div>
                         </div>

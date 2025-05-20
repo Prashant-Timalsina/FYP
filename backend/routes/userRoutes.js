@@ -14,6 +14,7 @@ import {
 } from "../controllers/userController.js"; // Import the user controller
 import authUser from "../middlewares/UserAuth.js";
 import adminAuth from "../middlewares/AdminAuth.js";
+import upload from "../middlewares/multer.js";
 
 const userRouter = express.Router();
 
@@ -35,7 +36,12 @@ userRouter.get("/single/me", authUser, userData);
 userRouter.delete("/remove/:id", [authUser, adminAuth], deleteUser);
 
 // Route to update a user (requires authentication)
-userRouter.put("/update", [authUser, adminAuth], updateUser);
+userRouter.put(
+  "/update",
+  authUser,
+  upload.fields([{ name: "image", maxCount: 1 }]),
+  updateUser
+);
 
 // Route to request a password reset (send reset email)
 userRouter.post("/forgot-password", requestPasswordReset);

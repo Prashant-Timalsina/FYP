@@ -144,22 +144,16 @@ const singleProduct = async (req, res) => {
 };
 
 const listProduct = async (req, res) => {
-  const page = parseInt(req.query.page) || 1; // Default to page 1
-  const limit = req.query.limit ? parseInt(req.query.limit) : 10; // Force limit to 4 per page
   try {
     // Instantiate ApiFeature
-    const features = new ApiFeature(productModel.find(), req.query)
-      .search() // Apply search filter if keyword is present
-      .pagination(limit); // Apply pagination logic
+    const features = new ApiFeature(productModel.find(), req.query).search(); // Apply search filter if keyword is present
 
-    const products = await features.query; // Get the products based on query
-    const totalPages = await features.getTotalPages(limit); // Get the total pages dynamically
+    const products = await features.query; // Get all products based on query
 
     res.status(200).json({
       success: true,
       message: "Products retrieved successfully",
       products,
-      totalPages,
     });
   } catch (error) {
     res.status(500).json({

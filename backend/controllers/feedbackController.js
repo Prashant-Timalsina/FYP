@@ -184,3 +184,41 @@ export const updateFeedback = async (req, res) => {
     });
   }
 };
+
+// Delete feedback
+export const deleteFeedback = async (req, res) => {
+  try {
+    const { feedbackId } = req.params;
+    const userId = req.user.id;
+
+    // Find and delete feedback
+    const feedback = await feedbackModel.findOneAndDelete({
+      _id: feedbackId,
+      userId,
+    });
+
+    if (!feedback) {
+      return res.status(404).json({
+        success: false,
+        message: "Feedback not found or unauthorized",
+      });
+    }
+
+    // Remove feedback from user's feedback array
+    await userModel.updateOne(
+      { _id: userId },
+      { $pull: { feedback: { productId: feedback.productId } } }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Feedback deleted successfully",
+    });
+  } catch (error) {
+    console.error("Error deleting feedback:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+};

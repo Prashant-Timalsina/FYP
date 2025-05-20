@@ -14,8 +14,6 @@ const UpdateWood = ({ token }) => {
   const [price, setPrice] = useState(0);
   const [advantages, setAdvantages] = useState([""]);
   const [image1, setImage1] = useState(null);
-  const [image2, setImage2] = useState(null);
-  const [image3, setImage3] = useState(null);
 
   // Fetch the wood details
   useEffect(() => {
@@ -30,8 +28,6 @@ const UpdateWood = ({ token }) => {
           setPrice(wood.price);
           setAdvantages(wood.advantages || [""]);
           setImage1(wood.images[0] || null);
-          setImage2(wood.images[1] || null);
-          setImage3(wood.images[2] || null);
         } else {
           toast.error(response.data.message);
         }
@@ -71,11 +67,9 @@ const UpdateWood = ({ token }) => {
     formData.append("name", name);
     formData.append("description", description);
     formData.append("price", price);
-    formData.append("advantages", JSON.stringify(advantages)); // Send advantages as JSON array
+    formData.append("advantages", JSON.stringify(advantages));
 
     if (image1 instanceof File) formData.append("image1", image1);
-    if (image2 instanceof File) formData.append("image2", image2);
-    if (image3 instanceof File) formData.append("image3", image3);
 
     try {
       const response = await axios.put(
@@ -108,9 +102,9 @@ const UpdateWood = ({ token }) => {
     >
       <h1 className="text-2xl font-bold mb-4">Update Wood</h1>
 
-      {/* Wood Images */}
+      {/* Wood Image */}
       <div>
-        <p className="mb-2">Wood Image 1</p>
+        <p className="mb-2">Wood Image</p>
         <label htmlFor="woodImage1">
           <img
             className="w-20"
@@ -125,48 +119,6 @@ const UpdateWood = ({ token }) => {
             onChange={(e) => handleImageChange(e, setImage1)}
             type="file"
             id="woodImage1"
-            hidden
-          />
-        </label>
-      </div>
-
-      <div>
-        <p className="mb-2">Wood Image 2</p>
-        <label htmlFor="woodImage2">
-          <img
-            className="w-20"
-            src={
-              image2 instanceof File
-                ? URL.createObjectURL(image2)
-                : image2 || assets.upload_area
-            }
-            alt="Upload"
-          />
-          <input
-            onChange={(e) => handleImageChange(e, setImage2)}
-            type="file"
-            id="woodImage2"
-            hidden
-          />
-        </label>
-      </div>
-
-      <div>
-        <p className="mb-2">Wood Image 3</p>
-        <label htmlFor="woodImage3">
-          <img
-            className="w-20"
-            src={
-              image3 instanceof File
-                ? URL.createObjectURL(image3)
-                : image3 || assets.upload_area
-            }
-            alt="Upload"
-          />
-          <input
-            onChange={(e) => handleImageChange(e, setImage3)}
-            type="file"
-            id="woodImage3"
             hidden
           />
         </label>
@@ -205,6 +157,7 @@ const UpdateWood = ({ token }) => {
           value={price}
           className="w-full max-w-[500px] px-3 py-2 border rounded-md"
           type="number"
+          min="1"
           placeholder="Enter wood price"
           required
         />

@@ -15,6 +15,7 @@ import feedbackRouter from "./routes/feedbackRoutes.js";
 import bodyParser from "body-parser";
 // import paymentRouter from "./routes/paymentRoutes.js";
 import chatRouter from "./routes/chatRoutes.js";
+import "./utils/scheduler.js"; // Import the scheduler
 
 import http from "http"; // Import HTTP module
 import { Server } from "socket.io"; // Import Socket.IO

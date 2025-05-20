@@ -63,7 +63,7 @@ const Payment = () => {
     if (!amount || !orderId) return;
 
     // Combine uuidv4() with orderId to generate transaction_uuid
-    const transactionUuid = uuidv4() + orderId;
+    const transactionUuid = `${uuidv4()}-${orderId}`;
 
     const updatedFormData = {
       ...formData,

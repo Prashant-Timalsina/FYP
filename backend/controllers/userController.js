@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import validator from "validator";
 import sendEmail from "../utils/emailService.js"; // Adjust path if needed
 import crypto from "crypto";
+import { v2 as cloudinary } from "cloudinary";
 
 const createToken = (id, role) => {
   return jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: "15h" });
@@ -221,7 +222,7 @@ export const adminLogin = async (req, res) => {
     const token = jwt.sign(
       { email, role: "admin", userId: user._id },
       process.env.JWT_SECRET,
-      { expiresIn: "1h" }
+      { expiresIn: "15h" }
     );
 
     return res.status(200).json({
@@ -347,7 +348,7 @@ export const requestPasswordReset = async (req, res) => {
     // Generate reset token & expiration
     const resetToken = crypto.randomBytes(32).toString("hex");
     user.resetToken = resetToken;
-    user.resetTokenExpiry = Date.now() + 15 * 60 * 1000; // 15 min expiry
+    user.resetTokenExpiry = Date.now() + 5 * 60 * 1000; // 5 min expiry
 
     console.log("Generated reset token:", resetToken);
     console.log("Before saving user:", user);

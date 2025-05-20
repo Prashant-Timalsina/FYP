@@ -31,28 +31,24 @@ const ShopContextProvider = (props) => {
   const [token, setToken] = useState(localStorage.getItem("token") || "");
   const navigate = useNavigate();
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1); // Track total pages
-
-  const fetchallProducts = async (page = 1, keyword = "") => {
+  const fetchallProducts = async (keyword = "") => {
     try {
       const response = await axios.get(`${backendUrl}/api/product/list`, {
-        params: { page, limit: 10, keyword }, // Pass page, limit, and keyword
+        params: { keyword: keyword.trim() }, // Trim the keyword and pass it correctly
       });
 
       if (response.data.success) {
         setProducts(response.data.products);
-        setTotalPages(response.data.totalPages); // Update total pages
         return response.data;
       } else {
         console.error("Error fetching products:", response.data.message);
         toast.error("Failed to fetch products");
-        return { products: [], totalPages: 1 }; // Fallback in case of error
+        return { products: [] }; // Fallback in case of error
       }
     } catch (error) {
       console.error("Error fetching products:", error);
       toast.error("Failed to fetch products");
-      return { products: [], totalPages: 1 }; // Fallback in case of error
+      return { products: [] }; // Fallback in case of error
     }
   };
 
@@ -88,14 +84,8 @@ const ShopContextProvider = (props) => {
   };
 
   useEffect(() => {
-    fetchallProducts(currentPage);
-  }, [currentPage]);
-
-  const changePage = (page) => {
-    if (page > 0 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
+    fetchallProducts();
+  }, []);
 
   useEffect(() => {
     fetchallCategories();
@@ -178,7 +168,7 @@ const ShopContextProvider = (props) => {
       const token = localStorage.getItem("token");
 
       if (!token) {
-        toast.error("You must be logged in to add items to the cart");
+        toast.info("Guest Visit - Please login to add items to cart");
         return;
       }
 
@@ -232,7 +222,7 @@ const ShopContextProvider = (props) => {
       const token = localStorage.getItem("token");
 
       if (!token) {
-        toast.error("You must be logged in to update the cart");
+        toast.info("Guest Visit - Please login to update cart");
         return;
       }
 
@@ -411,52 +401,39 @@ const ShopContextProvider = (props) => {
       setFavorites(response.data.favorites);
     } catch (error) {
       console.error("Error fetching favorites:", error.response?.data?.message);
-      toast.error("Failed to fetch favorites");
+      // Remove error toast
     }
   };
 
   const value = {
     navigate,
-    changePage,
-    currentPage,
-    totalPages,
-
     products,
     categories,
     woods,
-
     product,
     category,
     wood,
     fetchProductData,
     fetchallProducts,
-    // fetchRelatedProducts,
-
     cartItems,
     setCartItems,
-
     search,
     setSearch,
     showSearch,
     setShowSearch,
-
     token,
     setToken,
-
     currency,
     delivery_fee,
     backendUrl,
     frontendUrl,
-
     addToCart,
     cartCount,
     updateCart,
     getCart,
     cleanCart,
-
     getTotalPrice,
     partialPayment,
-
     favorites,
     addToFavorites,
     removeFromFavorites,
