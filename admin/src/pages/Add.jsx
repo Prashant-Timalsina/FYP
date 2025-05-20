@@ -160,7 +160,9 @@ const AddProduct = () => {
                 <div className="border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors w-full aspect-square">
                   <img
                     className="w-full h-full object-cover rounded-lg"
-                    src={!image1 ? assets.upload_area : URL.createObjectURL(image1)}
+                    src={
+                      !image1 ? assets.upload_area : URL.createObjectURL(image1)
+                    }
                     alt="Upload"
                   />
                   <input
@@ -175,7 +177,9 @@ const AddProduct = () => {
                 <div className="border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors w-full aspect-square">
                   <img
                     className="w-full h-full object-cover rounded-lg"
-                    src={!image2 ? assets.upload_area : URL.createObjectURL(image2)}
+                    src={
+                      !image2 ? assets.upload_area : URL.createObjectURL(image2)
+                    }
                     alt="Upload"
                   />
                   <input
@@ -190,7 +194,9 @@ const AddProduct = () => {
                 <div className="border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors w-full aspect-square">
                   <img
                     className="w-full h-full object-cover rounded-lg"
-                    src={!image3 ? assets.upload_area : URL.createObjectURL(image3)}
+                    src={
+                      !image3 ? assets.upload_area : URL.createObjectURL(image3)
+                    }
                     alt="Upload"
                   />
                   <input
@@ -205,7 +211,9 @@ const AddProduct = () => {
                 <div className="border-2 border-dashed border-gray-300 rounded-lg hover:border-gray-400 transition-colors w-full aspect-square">
                   <img
                     className="w-full h-full object-cover rounded-lg"
-                    src={!image4 ? assets.upload_area : URL.createObjectURL(image4)}
+                    src={
+                      !image4 ? assets.upload_area : URL.createObjectURL(image4)
+                    }
                     alt="Upload"
                   />
                   <input
@@ -249,8 +257,8 @@ const AddProduct = () => {
               value={price}
               className="w-full max-w-[200px] px-4 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200"
               type="number"
-              placeholder="0"
-              min="0"
+              placeholder="1"
+              min="1"
               required
             />
           </div>
@@ -321,8 +329,8 @@ const AddProduct = () => {
                 value={length}
                 className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200"
                 type="number"
-                placeholder="0"
-                min="0"
+                placeholder="1"
+                min="1"
                 required
               />
             </div>
@@ -333,8 +341,8 @@ const AddProduct = () => {
                 value={breadth}
                 className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200"
                 type="number"
-                placeholder="0"
-                min="0"
+                placeholder="1"
+                min="1"
                 required
               />
             </div>
@@ -345,8 +353,8 @@ const AddProduct = () => {
                 value={height}
                 className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-black focus:border-transparent transition-all duration-200"
                 type="number"
-                placeholder="0"
-                min="0"
+                placeholder="1"
+                min="1"
                 required
               />
             </div>

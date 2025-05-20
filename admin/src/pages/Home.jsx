@@ -62,39 +62,24 @@ const Home = () => {
   // Pie chart specific options
   const pieChartOptions = {
     ...chartOptions,
+    plugins: {
+      ...chartOptions.plugins,
+      tooltip: {
+        callbacks: {
+          label: function (context) {
+            const label = context.label || "";
+            const value = context.raw || 0;
+            // console.log("Pie Chart Hover:", { label, value });
+            return `${label}: ${value} orders`;
+          },
+        },
+      },
+    },
     animation: {
       duration: 2000,
       easing: "easeInOutQuart",
       animateRotate: true,
       animateScale: true,
-      onProgress: function (animation) {
-        const progress = animation.currentStep / animation.numSteps;
-        const chart = animation.chart;
-        const ctx = chart.ctx;
-        const datasets = chart.data.datasets;
-
-        datasets.forEach((dataset, i) => {
-          const meta = chart.getDatasetMeta(i);
-          if (!meta.hidden) {
-            meta.data.forEach((element, index) => {
-              const originalValue = dataset.data[index];
-              const animatedValue = originalValue * progress;
-
-              // Update the data value for this segment
-              dataset.data[index] = animatedValue;
-            });
-          }
-        });
-
-        chart.update("none"); // Update without animation
-      },
-    },
-    transitions: {
-      active: {
-        animation: {
-          duration: 400,
-        },
-      },
     },
   };
 
@@ -124,8 +109,8 @@ const Home = () => {
   }, [token, backendUrl]);
 
   const processOrderData = (ordersData) => {
-    // Process category data
-    const categorySales = {};
+    // Process category data - count total items per category
+    const categoryCounts = {};
     const weeklySales = {
       Monday: 0,
       Tuesday: 0,
@@ -136,25 +121,35 @@ const Home = () => {
       Sunday: 0,
     };
 
+    console.log("Processing orders data:", ordersData);
+
     ordersData.forEach((order) => {
-      // Process category data
+      console.log("Processing order:", order._id);
+      console.log("Order items:", order.items);
+
+      // Count items and their quantities per category
       order.items.forEach((item) => {
         const category = item.category || "Uncategorized";
-        if (!categorySales[category]) {
-          categorySales[category] = 0;
+        const quantity = item.quantity || 1; // Default to 1 if quantity is not specified
+
+        if (!categoryCounts[category]) {
+          categoryCounts[category] = 0;
         }
-        categorySales[category] += item.price * item.quantity;
+        categoryCounts[category] += quantity; // Add the quantity to the category count
       });
 
-      // Process weekly data
-      const orderDate = new Date(order.createdAt);
-      const dayOfWeek = orderDate.toLocaleDateString("en-US", {
-        weekday: "long",
-      });
-      weeklySales[dayOfWeek] += order.amount;
+      // Process weekly data - only count if payment > 0
+      if (order.payment > 0) {
+        const orderDate = new Date(order.createdAt);
+        const dayOfWeek = orderDate.toLocaleDateString("en-US", {
+          weekday: "long",
+        });
+        weeklySales[dayOfWeek] += order.payment;
+      }
     });
 
-    setCategoryData(categorySales);
+    console.log("Final category counts:", categoryCounts);
+    setCategoryData(categoryCounts);
     setWeeklyData(weeklySales);
   };
 
@@ -163,7 +158,7 @@ const Home = () => {
     labels: Object.keys(categoryData),
     datasets: [
       {
-        label: "Sales by Categories",
+        label: "Items by Categories",
         data: Object.values(categoryData),
         backgroundColor: [
           "#FF6384",
@@ -172,6 +167,9 @@ const Home = () => {
           "#4BC0C0",
           "#9966FF",
           "#FF9F40",
+          "#FF6384",
+          "#36A2EB",
+          "#FFCE56",
         ],
         hoverBackgroundColor: [
           "#FF6384",
@@ -180,6 +178,9 @@ const Home = () => {
           "#4BC0C0",
           "#9966FF",
           "#FF9F40",
+          "#FF6384",
+          "#36A2EB",
+          "#FFCE56",
         ],
         borderWidth: 2,
         borderColor: "#fff",
@@ -189,12 +190,23 @@ const Home = () => {
     ],
   };
 
+  // Log pie chart data for debugging
+  console.log("Pie Chart Data:", {
+    labels: pieData.labels,
+    data: pieData.datasets[0].data,
+    categoryCounts: categoryData,
+    totalItems: Object.values(categoryData).reduce(
+      (sum, count) => sum + count,
+      0
+    ),
+  });
+
   // Prepare bar chart data
   const barData = {
     labels: Object.keys(weeklyData),
     datasets: [
       {
-        label: "This Week Sales",
+        label: "This Week Sales (Payments)",
         data: Object.values(weeklyData),
         backgroundColor: "rgba(75,192,192,0.4)",
         borderColor: "rgba(75,192,192,1)",
@@ -205,12 +217,14 @@ const Home = () => {
     ],
   };
 
-  // Get recent sales history
-  const salesHistory = orders.slice(0, 5).map((order) => ({
-    date: new Date(order.createdAt).toLocaleDateString(),
-    item: order.items.map((item) => item.name).join(", "),
-    amount: `$${order.amount.toFixed(2)}`,
-  }));
+  // Get recent sales history - only include orders with payment > 0
+  const salesHistory = orders
+    .filter((order) => order.payment > 0)
+    .map((order) => ({
+      date: new Date(order.createdAt).toLocaleDateString(),
+      orderId: order._id, // Use order ID instead of items
+      amount: `$${Number(order.payment).toFixed(2)}`, // Use payment amount instead of total amount
+    }));
 
   if (loading) {
     return (
@@ -221,29 +235,31 @@ const Home = () => {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-screen">
+    <div className="p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-screen w-full">
       <div className="w-full max-w-screen-xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Charts Section */}
           <div className="flex-1 flex flex-col gap-6">
             {/* Pie Chart */}
-            <div>
+            <div className="w-full">
               <h2 className="text-xl font-semibold mb-4">
-                Sales by Categories
+                Items by Categories
               </h2>
               <div className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
-                <div className="relative h-[300px]">
+                <div className="relative h-[300px] w-full">
                   <Pie data={pieData} options={pieChartOptions} redraw={true} />
                 </div>
               </div>
             </div>
 
             {/* Bar Chart */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4">This Week Sales</h2>
+            <div className="w-full">
+              <h2 className="text-xl font-semibold mb-4">
+                This Week Sales (Payments)
+              </h2>
               <div className="bg-white p-4 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300">
-                <div className="relative h-[200px]">
+                <div className="relative h-[200px] w-full">
                   <Bar data={barData} options={barChartOptions} />
                 </div>
               </div>
@@ -251,12 +267,12 @@ const Home = () => {
           </div>
 
           {/* Sales History Section */}
-          <div className="flex-1">
-            <h2 className="text-xl font-semibold mb-4">Recent Sales History</h2>
-            <div className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-300">
+          <div className="flex-1 w-full">
+            <h2 className="text-xl font-semibold mb-4">Payment History</h2>
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-300 max-h-[400px] overflow-y-auto">
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-100">
+                  <thead className="bg-gray-100 sticky top-0">
                     <tr>
                       <th
                         scope="col"
@@ -268,13 +284,13 @@ const Home = () => {
                         scope="col"
                         className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                       >
-                        Items
+                        Order ID
                       </th>
                       <th
                         scope="col"
                         className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                       >
-                        Amount
+                        Payment Amount
                       </th>
                     </tr>
                   </thead>
@@ -288,7 +304,7 @@ const Home = () => {
                           {sale.date}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">
-                          {sale.item}
+                          {sale.orderId}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {sale.amount}

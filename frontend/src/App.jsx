@@ -24,6 +24,7 @@ import Payment from "./pages/Payment";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentFailure from "./pages/PaymentFailure";
 import Chatbot from "./components/Chatbot";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 import { FaCommentDots, FaTimes } from "react-icons/fa"; // Import icons
 import VerifyEmailPage from "./pages/VerifyEmailPage";
@@ -64,6 +65,7 @@ const App = () => {
               <Route path="/collection" element={<Collection />} />
               <Route path="/about" element={<About />} />
               <Route path="/contact" element={<Contact />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
               <Route path="/login" element={<Login />} />
               <Route path="/verify-email" element={<VerifyEmailPage />} />

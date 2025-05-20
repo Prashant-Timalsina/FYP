@@ -22,16 +22,32 @@ const Searchbar = () => {
     }
   }, [showSearch, isCollectionPage]);
 
+  // Add debounced search effect
+  useEffect(() => {
+    if (!isCollectionPage) return;
+
+    const delayDebounceFn = setTimeout(() => {
+      setLoading(true);
+      fetchallProducts(search).finally(() => setLoading(false));
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [search, isCollectionPage]);
+
   const handleSearch = async () => {
     if (isCollectionPage) {
-      fetchallProducts(1, search);
+      setLoading(true);
+      await fetchallProducts(search);
+      setLoading(false);
       setShowSearch(false);
     }
   };
 
-  const handleClose = () => {
+  const handleClose = async () => {
     setSearch(""); // Clear the search input
-    fetchallProducts(1, ""); // Fetch all products
+    setLoading(true);
+    await fetchallProducts(""); // Fetch all products
+    setLoading(false);
     setShowSearch(false);
   };
 
@@ -66,7 +82,11 @@ const Searchbar = () => {
           onClick={handleSearch}
         />
       </div>
-      {loading && <p>Loading...</p>}
+      {loading && (
+        <div className="flex justify-center items-center py-2">
+          <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      )}
 
       <X className="inline w-10 cursor-pointer" onClick={handleClose} />
     </motion.div>

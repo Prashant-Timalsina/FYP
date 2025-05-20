@@ -7,10 +7,20 @@ class ApiFeature {
   search() {
     const keyword = this.queryStr.keyword
       ? {
-          name: {
-            $regex: this.queryStr.keyword,
-            $options: "i", // Case-insensitive search
-          },
+          $or: [
+            {
+              name: {
+                $regex: this.queryStr.keyword,
+                $options: "i", // Case-insensitive search
+              },
+            },
+            {
+              description: {
+                $regex: this.queryStr.keyword,
+                $options: "i", // Case-insensitive search
+              },
+            },
+          ],
         }
       : {};
     this.query = this.query.find({ ...keyword });

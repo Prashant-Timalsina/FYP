@@ -13,6 +13,9 @@ const Profile = () => {
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [orderCount, setOrderCount] = useState(0);
+  const [avatarFile, setAvatarFile] = useState(null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
   const itemsPerPage = 6;
 
   useEffect(() => {
@@ -22,7 +25,6 @@ const Profile = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
         setUser(response.data.user);
-        toast.success("User data fetched successfully");
       } catch (err) {
         const errorMessage =
           err.response?.data?.message || "Failed to fetch user";
@@ -67,6 +69,42 @@ const Profile = () => {
     }
   };
 
+  const handleAvatarChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setAvatarFile(e.target.files[0]);
+      setAvatarPreview(URL.createObjectURL(e.target.files[0]));
+    }
+  };
+
+  const handleAvatarUpload = async (e) => {
+    e.preventDefault();
+    if (!avatarFile) return;
+    setAvatarUploading(true);
+    const formData = new FormData();
+    formData.append("userId", user._id);
+    formData.append("image", avatarFile);
+    try {
+      const response = await axios.put(
+        `${backendUrl}/api/user/update`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      toast.success("Avatar updated successfully");
+      setUser(response.data.updatedUser);
+      setAvatarFile(null);
+      setAvatarPreview(null);
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update avatar");
+    } finally {
+      setAvatarUploading(false);
+    }
+  };
+
   // Calculate pagination
   const totalPages = Math.ceil(favorites.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -103,8 +141,14 @@ const Profile = () => {
             {/* Profile Card */}
             <div className="bg-white rounded-xl shadow-lg p-6">
               <div className="flex flex-col items-center">
-                <div className="w-32 h-32 bg-gradient-to-br from-primary to-primary-dark rounded-full flex items-center justify-center mb-6">
-                  {user.avatar ? (
+                <div className="w-32 h-32 bg-gradient-to-br from-primary to-primary-dark rounded-full flex items-center justify-center mb-6 relative">
+                  {avatarPreview ? (
+                    <img
+                      src={avatarPreview}
+                      alt="Avatar Preview"
+                      className="w-full h-full rounded-full object-cover"
+                    />
+                  ) : user.avatar ? (
                     <img
                       src={user.avatar}
                       alt="User Avatar"
@@ -113,6 +157,30 @@ const Profile = () => {
                   ) : (
                     <FaUserCircle className="text-white text-8xl" />
                   )}
+                  <form
+                    onSubmit={handleAvatarUpload}
+                    className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full flex flex-col items-center"
+                    encType="multipart/form-data"
+                  >
+                    <label className="cursor-pointer bg-white bg-opacity-80 px-2 py-1 rounded text-xs font-semibold text-primary border border-primary hover:bg-primary hover:text-white transition-colors duration-200">
+                      Change
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarChange}
+                        className="hidden"
+                      />
+                    </label>
+                    {avatarFile && (
+                      <button
+                        type="submit"
+                        className="mt-2 px-3 py-1 bg-primary text-white rounded text-xs hover:bg-primary-dark transition-colors duration-200"
+                        disabled={avatarUploading}
+                      >
+                        {avatarUploading ? "Uploading..." : "Upload"}
+                      </button>
+                    )}
+                  </form>
                 </div>
                 <h2 className="text-2xl font-bold text-gray-800 mb-2">
                   {user.name}
@@ -134,6 +202,14 @@ const Profile = () => {
                     </div>
                   </div>
                 </div>
+                <button
+                  onClick={() => {
+                    window.location.href = "http://localhost:5174/";
+                  }}
+                  className="mt-4 px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors duration-300"
+                >
+                  Go to Admin Page
+                </button>
               </div>
             </div>
           </div>
@@ -156,25 +232,23 @@ const Profile = () => {
                         key={product._id}
                         className="group relative bg-gray-50 rounded-lg overflow-hidden hover:shadow-lg transition-all duration-300"
                       >
-                        <div className="aspect-w-16 aspect-h-9">
+                        <div
+                          className="aspect-w-16 aspect-h-9 cursor-pointer"
+                          onClick={() => handleProductClick(product._id)}
+                        >
                           <img
                             src={product.image[0]}
                             alt={product.name}
-                            className="w-full h-48 object-cover"
+                            className="w-full h-48 object-cover hover:opacity-90 transition-opacity duration-300"
                           />
                         </div>
                         <div className="p-4">
-                          <h3 className="font-semibold text-gray-800 mb-2">
+                          <h3
+                            className="font-semibold text-gray-800 mb-2 cursor-pointer hover:text-primary transition-colors duration-300"
+                            onClick={() => handleProductClick(product._id)}
+                          >
                             {product.name}
                           </h3>
-                          {/* <div className="flex flex-wrap gap-2 mb-2">
-                            <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                              {product.category}
-                            </span>
-                            <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
-                              {product.wood}
-                            </span>
-                          </div> */}
                           <p className="text-sm text-gray-500 line-clamp-2 mb-4">
                             {product.description}
                           </p>
@@ -189,10 +263,7 @@ const Profile = () => {
                             </div>
                             <div className="flex gap-2">
                               <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleProductClick(product._id);
-                                }}
+                                onClick={() => handleProductClick(product._id)}
                                 className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-colors duration-300"
                               >
                                 View Details

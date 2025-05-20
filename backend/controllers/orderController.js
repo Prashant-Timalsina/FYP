@@ -56,7 +56,7 @@ Your order details:
 - Total Amount: NRs. ${amount}
 - Status: Pending (awaiting approval)
 - Delivery Address: ${address.street}, ${address.city}, ${address.zipcode}
-- Payment Method: Physical Payment (Pending)
+- Payment Method: Payment (Pending)
 
 We will process your order shortly. You will receive updates as your order moves through different stages.
 
@@ -213,6 +213,11 @@ export const updateStatus = async (req, res) => {
       });
     }
 
+    // Set approvedAt timestamp when status changes to approved
+    if (status === "approved") {
+      order.approvedAt = new Date();
+    }
+
     order.status = status;
     await order.save();
 
@@ -241,8 +246,18 @@ TimberCraft Team
   }
 };
 
-// cancel order
-// export const cancelOrder =
+// Function to calculate refund amount
+const calculateRefundAmount = (order) => {
+  const totalAmount = order.amount;
+  const nonRefundableAmount = totalAmount * 0.2; // 20% of total amount
+  const currentPayment = order.payment || 0;
+
+  if (currentPayment <= nonRefundableAmount) {
+    return 0; // No refund if payment is less than or equal to 20%
+  }
+
+  return currentPayment - nonRefundableAmount; // Refund amount minus 20%
+};
 
 export const cancelOrder = async (req, res) => {
   try {
@@ -264,27 +279,68 @@ export const cancelOrder = async (req, res) => {
         .json({ success: false, message: "Cannot cancel this order" });
     }
 
-    order.status = "cancelled";
-    await order.save();
+    let refundAmount = 0;
+    let nonRefundableAmount = 0;
+    let message = "";
 
-    const subject = "Order Cancelled - TimberCraft";
-    const message = `
+    if (order.status === "processing") {
+      // For processing orders, keep 20% of total amount
+      nonRefundableAmount = Number((order.amount * 0.2).toFixed(2));
+      order.payment = nonRefundableAmount; // Set payment to 20% of total amount
+      message = `
 Hello ${order.userId.name},
 
-We regret to inform you that your order (ID: ${order._id}) has been cancelled.
+Your order (ID: ${order._id}) has been cancelled.
+
+Order Details:
+- Order ID: ${order._id}
+- Total Amount: ${Number(order.amount).toFixed(2)}
+- Non-refundable Amount (20%): ${nonRefundableAmount}
+- Final Payment Retained: ${nonRefundableAmount}
+
+Note: As per our policy, 20% of the total amount (${nonRefundableAmount}) is non-refundable for orders in processing stage.
 
 If this was a mistake or you have any concerns, feel free to contact our support team.
 
 Best regards,  
 TimberCraft Team
-    `;
+      `;
+    } else {
+      // For other statuses (pending, approved), reset payment to 0
+      order.payment = 0;
+      message = `
+Hello ${order.userId.name},
 
-    await sendEmail(order.userId.email, subject, message);
+Your order (ID: ${order._id}) has been cancelled.
+
+Order Details:
+- Order ID: ${order._id}
+- Total Amount: ${Number(order.amount).toFixed(2)}
+- Payment Status: Reset to 0.00
+
+If this was a mistake or you have any concerns, feel free to contact our support team.
+
+Best regards,  
+TimberCraft Team
+      `;
+    }
+
+    // Update order status and payment
+    order.status = "cancelled";
+    order.paymentStatus = "Pending"; // Reset payment status
+    await order.save();
+
+    await sendEmail(
+      order.userId.email,
+      "Order Cancelled - TimberCraft",
+      message
+    );
 
     res.status(200).json({
       success: true,
       message: "Order cancelled successfully",
       order,
+      nonRefundableAmount: nonRefundableAmount || 0,
     });
   } catch (error) {
     console.error("Cancel order error:", error);
@@ -292,11 +348,71 @@ TimberCraft Team
   }
 };
 
+// Function to handle payment status update and cancellation
+export const handlePaymentAndCancellation = async (orderId) => {
+  try {
+    const order = await orderModel.findById(orderId);
+    if (!order) {
+      throw new Error("Order not found");
+    }
+
+    const totalAmount = order.amount;
+    const nonRefundableAmount = totalAmount * 0.2; // 20% of total amount
+    const currentPayment = order.payment || 0;
+
+    // If payment is more than 20%, set it to 20%
+    if (currentPayment > nonRefundableAmount) {
+      order.payment = nonRefundableAmount;
+    }
+
+    // Update payment status to paid if it was pending
+    if (order.paymentStatus === "Pending") {
+      order.paymentStatus = "Paid";
+    }
+
+    // Cancel the order
+    order.status = "cancelled";
+    order.refundAmount = 0; // No refund as payment is kept at 20%
+
+    await order.save();
+
+    // Send email notification
+    const subject = "Order Cancelled - Payment Adjustment";
+    const message = `
+Hello ${order.userId.name},
+
+Your order (ID: ${order._id}) has been cancelled.
+
+Order Details:
+- Order ID: ${order._id}
+- Total Amount: ${order.amount}
+- Adjusted Payment: ${order.payment}
+- Non-refundable Amount (20%): ${nonRefundableAmount}
+
+Note: As per our policy, 20% of the total amount (${nonRefundableAmount}) has been retained as a non-refundable deposit.
+
+If you have any questions, please contact our support team.
+
+Best regards,
+TimberCraft Team
+    `;
+
+    await sendEmail(order.userId.email, subject, message);
+
+    return order;
+  } catch (error) {
+    console.error("Error in handlePaymentAndCancellation:", error);
+    throw error;
+  }
+};
+
 export const updatePaymentStatus = async (req, res) => {
   try {
     const { orderId, payment } = req.body;
 
-    const order = await orderModel.findById(orderId);
+    const order = await orderModel
+      .findById(orderId)
+      .populate("userId", "name email");
     if (!order) {
       return res
         .status(404)
@@ -310,22 +426,52 @@ export const updatePaymentStatus = async (req, res) => {
       });
     }
 
-    // Update payment and payment status
-    order.payment = payment;
+    // Update payment amount
+    order.payment = Number(payment);
 
-    if (payment === 0) {
+    // Update payment status based on payment amount
+    if (order.payment === 0) {
       order.paymentStatus = "Pending";
-    } else if (payment < order.amount) {
+    } else if (order.payment < order.amount) {
       order.paymentStatus = "Partial";
-    } else if (payment === order.amount) {
+    } else if (order.payment >= order.amount) {
       order.paymentStatus = "Paid";
     }
 
+    // Save the updated order
     await order.save();
+
+    // Try to send email notification, but don't let it fail the payment update
+    try {
+      if (order.userId && order.userId.email) {
+        const subject = "Payment Status Update - TimberCraft";
+        const message = `
+Dear ${order.userId.name},
+
+Your payment status for order (ID: ${order._id}) has been updated.
+
+Order Details:
+- Order ID: ${order._id}
+- Total Amount: ${order.amount}
+- Payment Made: ${order.payment}
+- Payment Status: ${order.paymentStatus}
+
+Thank you for your business!
+
+Best regards,
+TimberCraft Team
+        `;
+
+        await sendEmail(order.userId.email, subject, message);
+      }
+    } catch (emailError) {
+      console.error("Error sending payment update email:", emailError);
+      // Don't throw the error, just log it
+    }
 
     return res.status(200).json({
       success: true,
-      message: "Payment status updated",
+      message: "Payment status updated successfully",
       order,
     });
   } catch (error) {
@@ -453,5 +599,82 @@ TimberCraft Team
       success: false,
       message: error.message,
     });
+  }
+};
+
+// Function to send payment reminder after 24 hours
+export const sendPaymentReminder = async () => {
+  try {
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000); // 24 hours ago
+
+    const pendingOrders = await orderModel
+      .find({
+        status: "approved",
+        paymentStatus: "Pending",
+        approvedAt: { $lte: twentyFourHoursAgo },
+      })
+      .populate("userId", "name email");
+
+    for (const order of pendingOrders) {
+      const subject = "Payment Reminder - TimberCraft";
+      const message = `
+Dear ${order.userId.name},
+
+This is a reminder that your order (ID: ${order._id}) is awaiting payment.
+The total amount due is ${order.amount}.
+
+Please complete your payment within the next 24 hours to avoid order cancellation.
+
+Thank you for your prompt attention to this matter.
+
+Best regards,
+TimberCraft Team
+      `;
+
+      await sendEmail(order.userId.email, subject, message);
+    }
+  } catch (error) {
+    console.error("Error sending payment reminders:", error);
+  }
+};
+
+// Function to auto-cancel orders after 48 hours of pending payment
+export const autoCancelPendingOrders = async () => {
+  try {
+    const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000); // 48 hours ago
+
+    const pendingOrders = await orderModel
+      .find({
+        status: "approved",
+        paymentStatus: "Pending",
+        approvedAt: { $lte: fortyEightHoursAgo },
+      })
+      .populate("userId", "name email");
+
+    for (const order of pendingOrders) {
+      order.status = "cancelled";
+      await order.save();
+
+      const subject = "Order Cancelled - Payment Not Received";
+      const message = `
+Dear ${order.userId.name},
+
+We regret to inform you that your order (ID: ${order._id}) has been automatically cancelled due to non-payment within the 48-hour window.
+
+Order Details:
+- Order ID: ${order._id}
+- Total Amount: ${order.amount}
+- Reason for Cancellation: Payment not received within 48 hours of approval
+
+If you would like to place a new order, please visit our website.
+
+Best regards,
+TimberCraft Team
+      `;
+
+      await sendEmail(order.userId.email, subject, message);
+    }
+  } catch (error) {
+    console.error("Error auto-cancelling orders:", error);
   }
 };

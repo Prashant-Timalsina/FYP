@@ -56,7 +56,10 @@ const orderSchema = new mongoose.Schema(
       type: String,
       default: "Pending",
     },
-
+    approvedAt: {
+      type: Date,
+      default: null,
+    },
     refundAmount: { type: Number, default: 0 },
     date: {
       type: Date,

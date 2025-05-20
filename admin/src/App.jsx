@@ -19,7 +19,7 @@ import UserList from "./pages/UserList";
 import UpdateWood from "./pages/UpdateWood";
 import ChatBox from "./pages/ChatBox";
 
-export const currency = "$";
+export const currency = "NRs.";
 
 const ProtectedRoute = () => {
   const { token } = useContext(AdminContext);
@@ -27,7 +27,6 @@ const ProtectedRoute = () => {
 };
 
 const App = () => {
-  const { token } = useContext(AdminContext);
   const location = useLocation();
   const isLoginPage = location.pathname === "/";
 

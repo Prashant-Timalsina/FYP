@@ -3,22 +3,29 @@ import { FaTrash } from "react-icons/fa";
 import { assets } from "../assets/assets";
 import { AdminContext } from "../context/AdminContext";
 import axios from "axios";
+import { toast } from "react-toastify";
 
 const WoodListTable = () => {
   const { backendUrl, navigate, token } = useContext(AdminContext);
   const [woodNames, setWoodNames] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Modal state
+  const [showModal, setShowModal] = useState(false);
+  const [productsUsing, setProductsUsing] = useState([]);
+  const [modalTitle, setModalTitle] = useState("");
+
   useEffect(() => {
     fetchWoodNames();
   }, []);
 
   const fetchWoodNames = async () => {
+    setLoading(true);
     try {
-      const response = await axios.get(`${backendUrl}/api/wood/all`);
-      setWoodNames(response.data.woods);
+      const res = await axios.get(`${backendUrl}/api/wood/all`);
+      setWoodNames(res.data.woods || []);
     } catch (error) {
-      console.error("Error fetching wood names:", error);
+      toast.error("Failed to fetch woods");
     } finally {
       setLoading(false);
     }
@@ -29,6 +36,23 @@ const WoodListTable = () => {
   };
 
   const handleDeleteWood = async (id) => {
+    // Check if any product uses this wood
+    try {
+      const response = await axios.get(`${backendUrl}/api/product/list`);
+      const products = response.data.products || [];
+      const usedProducts = products.filter((product) => product.wood === id);
+
+      if (usedProducts.length > 0) {
+        setProductsUsing(usedProducts);
+        setModalTitle("Cannot delete wood. Products using this wood:");
+        setShowModal(true);
+        return;
+      }
+    } catch (error) {
+      toast.error("Failed to check products for wood");
+      return;
+    }
+
     if (window.confirm("Are you sure you want to delete this wood?")) {
       try {
         const response = await axios.delete(
@@ -36,12 +60,10 @@ const WoodListTable = () => {
           { headers: { Authorization: `Bearer ${token}` } }
         );
         if (response.data.success) {
-          setWoodNames((prevWoods) =>
-            prevWoods.filter((wood) => wood._id !== id)
-          );
+          setWoodNames((prev) => prev.filter((wood) => wood._id !== id));
         }
       } catch (error) {
-        console.error("Error deleting wood:", error);
+        toast.error("Failed to delete wood");
       }
     }
   };
@@ -89,7 +111,12 @@ const WoodListTable = () => {
                       <div className="absolute left-0 top-full mt-2 hidden group-hover:block bg-white shadow-lg rounded-lg p-4 w-64 z-10">
                         <div className="flex gap-4">
                           <img
-                            src={wood.image || assets.defaultImage}
+                            src={
+                              Array.isArray(wood.images) &&
+                              wood.images.length > 0
+                                ? wood.images[0]
+                                : wood.images || assets.defaultImage
+                            }
                             alt={wood.name}
                             className="w-16 h-16 object-cover rounded"
                           />
@@ -144,6 +171,28 @@ const WoodListTable = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Modal */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div className="bg-white rounded-lg p-6 max-w-lg w-full">
+            <h2 className="text-lg font-semibold mb-4">{modalTitle}</h2>
+            <ul className="mb-4 max-h-60 overflow-y-auto">
+              {productsUsing.map((product) => (
+                <li key={product._id} className="mb-2">
+                  <span className="font-medium">{product.name}</span>
+                </li>
+              ))}
+            </ul>
+            <button
+              onClick={() => setShowModal(false)}
+              className="mt-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

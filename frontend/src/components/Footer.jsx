@@ -33,18 +33,43 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4 text-white">COMPANY</h3>
             <ul className="space-y-2">
-              {["Home", "About Us", "Shop", "Contact", "Privacy Policy"].map(
-                (item, index) => (
-                  <li key={index}>
-                    <Link
-                      to={`/${item.toLowerCase().replace(/\s/g, "-")}`}
-                      className="hover:text-white transition-colors"
-                    >
-                      {item}
-                    </Link>
-                  </li>
-                )
-              )}
+              <li>
+                <Link to="/" className="hover:text-white transition-colors">
+                  Home
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/about"
+                  className="hover:text-white transition-colors"
+                >
+                  About Us
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/collection"
+                  className="hover:text-white transition-colors"
+                >
+                  Shop
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/contact"
+                  className="hover:text-white transition-colors"
+                >
+                  Contact
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/privacy-policy"
+                  className="hover:text-white transition-colors"
+                >
+                  Privacy Policy
+                </Link>
+              </li>
             </ul>
           </div>
 

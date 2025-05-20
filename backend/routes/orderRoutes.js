@@ -12,6 +12,7 @@ import {
   updatePaymentStatus,
   updateStatus,
   userOrders,
+  handlePaymentAndCancellation,
 } from "../controllers/orderController.js";
 
 const orderRouter = express.Router();
@@ -36,8 +37,9 @@ orderRouter.post(
 orderRouter.get("/myorder", authUser, userOrders);
 orderRouter.put("/payment", authUser, updatePaymentStatus);
 orderRouter.put("/cancel", authUser, cancelOrder);
+orderRouter.put("/payment-cancel", authUser, handlePaymentAndCancellation);
 
 // Shared routes (accessible by both users and admins)
-orderRouter.get("/:id", [authUser, adminAuth], getOrderById);
+orderRouter.get("/:id", authUser, getOrderById);
 
 export default orderRouter;

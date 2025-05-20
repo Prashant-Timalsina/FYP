@@ -12,10 +12,18 @@ const ChatWithSeller = () => {
   const socket = useRef();
   const { token, backendUrl } = useContext(ShopContext);
 
-  // 🔥 Parse userId once and reuse
-  const userId = JSON.parse(atob(token.split(".")[1])).id;
+  // Parse user data from token
+  const userData = token ? JSON.parse(atob(token.split(".")[1])) : null;
+  const userId = userData?.id;
+  const userRole = userData?.role;
 
   useEffect(() => {
+    // Only initialize chat if user is not an admin
+    if (userRole === "admin") {
+      setLoading(false);
+      return;
+    }
+
     // Initialize socket connection
     socket.current = io(backendUrl);
 
@@ -26,7 +34,7 @@ const ChatWithSeller = () => {
           `${backendUrl}/api/chat/user/messages`,
           {
             headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
+              Authorization: `Bearer ${token}`,
             },
           }
         );
@@ -35,7 +43,15 @@ const ChatWithSeller = () => {
           setMessages(response.data.messages);
         }
       } catch (error) {
-        toast.error("Failed to load messages");
+        // Only show error if it's not just "no messages"
+        if (
+          !error.response ||
+          (error.response && error.response.status !== 404)
+        ) {
+          toast.error("Failed to load messages");
+        }
+        // If 404 or no messages, just set empty array
+        setMessages([]);
       } finally {
         setLoading(false);
       }
@@ -51,7 +67,7 @@ const ChatWithSeller = () => {
     return () => {
       socket.current.disconnect();
     };
-  }, []);
+  }, [token, userRole]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
@@ -62,7 +78,7 @@ const ChatWithSeller = () => {
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || userRole === "admin") return;
 
     try {
       await axios.post(
@@ -73,7 +89,7 @@ const ChatWithSeller = () => {
         },
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${token}`,
           },
         }
       );
@@ -92,8 +108,36 @@ const ChatWithSeller = () => {
     );
   }
 
+  // Show message if user is admin
+  if (userRole === "admin") {
+    return (
+      <div className="w-full flex flex-col bg-gray-50 h-[500px] rounded-lg shadow-lg">
+        <div className="bg-white shadow-sm sticky top-0 z-10">
+          <div className="max-w-7xl mx-auto px-4 py-4">
+            <h2 className="text-xl font-semibold text-gray-800">
+              Chat with Seller
+            </h2>
+          </div>
+        </div>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center p-6">
+            <p className="text-gray-600 text-lg mb-4">
+              Please use the admin panel to chat with users
+            </p>
+            <button
+              onClick={() => (window.location.href = "/admin/chat")}
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors duration-200"
+            >
+              Go to Admin Chat
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="w-full flex flex-col bg-gray-50 h-[calc(100vh-4rem)] rounded-lg shadow-lg">
+    <div className="w-full flex flex-col bg-gray-50 h-[500px] rounded-lg shadow-lg">
       {/* Header */}
       <div className="bg-white shadow-sm sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-4">

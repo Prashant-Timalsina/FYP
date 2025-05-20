@@ -215,8 +215,8 @@ const UpdateProduct = () => {
           value={price}
           className="w-full max-w-[100px] px-3 py-2 border rounded-md"
           type="number"
-          placeholder="0"
-          min="0"
+          placeholder="1"
+          min="1"
           required
         />
       </div>
@@ -271,7 +271,7 @@ const UpdateProduct = () => {
             className="w-full max-w-[100px] px-3 py-2 border rounded-md"
             type="number"
             placeholder="0"
-            min="0"
+            min="1"
             required
           />
         </div>
@@ -283,7 +283,7 @@ const UpdateProduct = () => {
             className="w-full max-w-[100px] px-3 py-2 border rounded-md"
             type="number"
             placeholder="0"
-            min="0"
+            min="1"
             required
           />
         </div>
@@ -295,7 +295,7 @@ const UpdateProduct = () => {
             className="w-full max-w-[100px] px-3 py-2 border rounded-md"
             type="number"
             placeholder="0"
-            min="0"
+            min="1"
             required
           />
         </div>

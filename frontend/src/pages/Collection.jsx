@@ -6,70 +6,29 @@ import { useLocation } from "react-router-dom";
 import ProductItem from "../components/ProductItem";
 
 const Collection = () => {
-  const {
-    navigate,
-    categories,
-    woods,
-    products,
-    currentPage,
-    totalPages,
-    changePage,
-  } = useContext(ShopContext);
+  const { navigate, categories, woods, products } = useContext(ShopContext);
 
   const [sortType, setSortType] = useState("relevant");
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [selectedWoods, setSelectedWoods] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState(products || []);
   const location = useLocation();
 
-  // const filterAndSortProducts = () => {
-  //   let filteredProducts = [...products];
-
-  //   console.log("Before filtering:", filteredProducts);
-  //   console.log("Selected Categories:", selectedCategories);
-  //   console.log("Selected Woods:", selectedWoods);
-
-  //   if (selectedCategories.length > 0) {
-  //     filteredProducts = filteredProducts.filter((product) => {
-  //       console.log("Checking Category:", product.category); // Log category
-  //       return (
-  //         product.category &&
-  //         selectedCategories.includes(product.category?.name)
-  //       );
-  //     });
-  //   }
-
-  //   if (selectedWoods.length > 0) {
-  //     filteredProducts = filteredProducts.filter((product) => {
-  //       console.log("Checking Wood:", product.wood); // Log wood
-  //       return product.wood && selectedWoods.includes(product.wood?.name);
-  //     });
-  //   }
-
-  //   console.log("After filtering:", filteredProducts);
-
-  //   if (sortType === "low-high") {
-  //     filteredProducts.sort((a, b) => a.price - b.price);
-  //   } else if (sortType === "high-low") {
-  //     filteredProducts.sort((a, b) => b.price - a.price);
-  //   }
-
-  //   setFilteredProducts(filteredProducts);
-  // };
+  // Initialize filteredProducts when products change
+  useEffect(() => {
+    if (products && products.length > 0) {
+      setFilteredProducts(products);
+    }
+  }, [products]);
 
   const filterAndSortProducts = () => {
     let filteredProducts = [...products];
-
-    // console.log("Before filtering:", filteredProducts);
-    // console.log("Selected Categories:", selectedCategories);
-    // console.log("Selected Woods:", selectedWoods);
 
     if (selectedCategories.length > 0) {
       filteredProducts = filteredProducts.filter((product) => {
         const categoryName = categories.find(
           (cat) => cat._id === product.category
         )?.name;
-        // console.log("Checking Category Name:", categoryName);
         return categoryName && selectedCategories.includes(categoryName);
       });
     }
@@ -77,12 +36,9 @@ const Collection = () => {
     if (selectedWoods.length > 0) {
       filteredProducts = filteredProducts.filter((product) => {
         const woodName = woods.find((wood) => wood._id === product.wood)?.name;
-        // console.log("Checking Wood Name:", woodName);
         return woodName && selectedWoods.includes(woodName);
       });
     }
-
-    // console.log("After filtering:", filteredProducts);
 
     if (sortType === "low-high") {
       filteredProducts.sort((a, b) => a.price - b.price);
@@ -101,13 +57,10 @@ const Collection = () => {
     }
   }, [location]);
 
-  const handlePageChange = (page) => {
-    changePage(page); // Update the current page using the context
-  };
-
   useEffect(() => {
-    // console.log("Products:", products);
-    filterAndSortProducts();
+    if (products && products.length > 0) {
+      filterAndSortProducts();
+    }
   }, [products, selectedCategories, selectedWoods, sortType]);
 
   const handleCategoryChange = (category) => {
@@ -158,9 +111,9 @@ const Collection = () => {
           </div>
         </div>
 
-        {/* Wood Filter */}
+        {/* Wood Type Filter */}
         <div className="border border-gray-300 pl-5 py-3 mt-4">
-          <p className="mb-3 text-sm font-medium">WOODS</p>
+          <p className="mb-3 text-sm font-medium">WOOD TYPES</p>
           <div className="flex flex-col gap-2 text-sm">
             {woods.map((wood) => (
               <label key={wood._id} className="flex gap-2 items-center">
@@ -176,25 +129,15 @@ const Collection = () => {
             ))}
           </div>
         </div>
-
-        {/* Product Sort for small screens */}
-        <div className="mt-6 md:mt-0 md:hidden">
-          <select
-            className="border-2 border-gray-300 text-sm px-2 w-full"
-            value={sortType}
-            onChange={(e) => setSortType(e.target.value)}
-          >
-            <option value="relevant">Sort by: Relevant</option>
-            <option value="low-high">Sort by: Low to High</option>
-            <option value="high-low">Sort by: High to Low</option>
-          </select>
-        </div>
       </div>
 
-      {/* Right Side */}
+      {/* Products Section */}
       <div className="flex-1">
-        <div className="flex flex-col md:flex-row justify-between text-base sm:text-2xl mb-4">
+        <div className="flex justify-between items-center mb-6">
           <Title text1={"ALL"} text2={"COLLECTIONS"} />
+          <p className="text-sm text-gray-500">
+            {filteredProducts.length} Products
+          </p>
 
           {/* Product Sort for medium and larger screens */}
           <div className="hidden md:block">
@@ -223,33 +166,8 @@ const Collection = () => {
             },
           }}
         >
-          {filteredProducts.length > 0 ? (
+          {filteredProducts && filteredProducts.length > 0 ? (
             filteredProducts.map((product) => (
-              // <motion.div
-              //   key={product._id}
-              //   onClick={() => showProduct(product._id)}
-              //   className="border p-4 rounded-md shadow-md w-full max-w-[300px] cursor-pointer"
-              //   initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              //   animate={{ opacity: 1, y: 0, scale: 1 }}
-              //   transition={{ duration: 0.4, ease: "easeOut" }}
-              // >
-              //   <div className="overflow-hidden w-full h-48 relative">
-              //     <motion.img
-              //       src={product.image[0]}
-              //       alt={product.name}
-              //       className="w-full h-full object-cover"
-              //       whileHover={{ scale: 1.1 }}
-              //       transition={{ duration: 0.3 }}
-              //     />
-              //   </div>
-              //   <h2 className="text-lg font-bold">{product.name}</h2>
-              //   <p className="text-gray-700">{product.description}</p>
-              //   <p className="text-gray-900 font-semibold">
-              //     {currency}
-              //     {product.price}
-              //   </p>
-              // </motion.div>
-
               <ProductItem
                 key={product._id}
                 id={product._id}
@@ -260,32 +178,19 @@ const Collection = () => {
               />
             ))
           ) : (
-            <motion.p
-              className="text-center text-gray-500"
+            <motion.div
+              className="col-span-full text-center py-8"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
             >
-              No products found for the selected filter.
-            </motion.p>
+              <p className="text-gray-500 text-lg mb-2">No products found</p>
+              <p className="text-gray-400 text-sm">
+                Try adjusting your search or filter criteria
+              </p>
+            </motion.div>
           )}
         </motion.div>
-        {/* Pagination Controls */}
-        <div className="flex justify-center gap-2 mt-6">
-          <button
-            onClick={() => handlePageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-          >
-            Previous
-          </button>
-          <span>{`Page ${currentPage} of ${totalPages}`}</span>
-          <button
-            onClick={() => handlePageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-          >
-            Next
-          </button>
-        </div>
       </div>
     </motion.div>
   );

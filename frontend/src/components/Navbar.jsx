@@ -16,6 +16,7 @@ const Navbar = () => {
     setToken(null);
     localStorage.removeItem("token");
     navigate("/login");
+    window.location.reload();
   };
 
   let tooltipTimeout;

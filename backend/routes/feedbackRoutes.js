@@ -4,6 +4,7 @@ import {
   getProductFeedback,
   getUserProductFeedback,
   updateFeedback,
+  deleteFeedback,
 } from "../controllers/feedbackController.js";
 import authUser from "../middlewares/UserAuth.js";
 
@@ -20,5 +21,8 @@ feedbackRouter.get("/user/:productId", authUser, getUserProductFeedback);
 
 // Update feedback
 feedbackRouter.put("/update/:feedbackId", authUser, updateFeedback);
+
+// Delete feedback
+feedbackRouter.delete("/delete/:feedbackId", authUser, deleteFeedback);
 
 export default feedbackRouter;

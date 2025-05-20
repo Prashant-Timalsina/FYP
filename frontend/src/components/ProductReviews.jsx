@@ -144,12 +144,18 @@ const ProductReviews = ({ productId }) => {
     }
 
     try {
+      console.log("Attempting to delete review:", userReview._id);
       const response = await axios.delete(
         `${backendUrl}/api/feedback/delete/${userReview._id}`,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
       );
+
+      console.log("Delete response:", response.data);
 
       if (response.data.success) {
         toast.success("Review deleted successfully");
@@ -157,10 +163,15 @@ const ProductReviews = ({ productId }) => {
         setRating(0);
         setReviewText("");
         fetchReviews();
+      } else {
+        toast.error(response.data.message || "Failed to delete review");
       }
     } catch (error) {
-      console.error("Error deleting review:", error);
-      toast.error("Failed to delete review");
+      console.error("Error deleting review:", error.response?.data || error);
+      toast.error(
+        error.response?.data?.message ||
+          "Failed to delete review. Please try again."
+      );
     }
   };
 
