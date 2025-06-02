@@ -63,19 +63,23 @@ http://localhost:4000
 Create a `.env` file in the root directory based on `.env.example`, and provide your environment-specific values:
 
 /admin/.env
+
 VITE_BACKEND_URL =
 
 /backend/.env
-MONGODB_URI = ''
 
-CLOUDINARY_API_KEY = ''
-CLOUDINARY_SECRET_KEY = ''
-CLOUDINARY_NAME = ''
+MONGODB_URI = 
+
+CLOUDINARY_API_KEY = 
+
+CLOUDINARY_SECRET_KEY = 
+
+CLOUDINARY_NAME = 
 
 ADMIN_EMAIL = "admin@timber.com"
 ADMIN_PASSWORD = "12abcd"
 
-JWT_SECRET = ''
+JWT_SECRET = 
 
 EMAIL_USER= 
 EMAIL_PASS= 
@@ -83,6 +87,7 @@ EMAIL_PASS=
 FRONTEND_URL=http://localhost:5173
 
 /frontend/.env
+
 VITE_BACKEND_URL = http://localhost:4000
 FRONTEND_URL = http://localhost:5173
 
