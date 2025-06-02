@@ -62,11 +62,11 @@ http://localhost:4000
 
 Create a `.env` file in the root directory based on `.env.example`, and provide your environment-specific values:
 
-/admin/.env
+# /admin/.env
 
 VITE_BACKEND_URL =
 
-/backend/.env
+# /backend/.env
 
 MONGODB_URI = 
 
@@ -86,7 +86,7 @@ EMAIL_PASS=
 
 FRONTEND_URL=http://localhost:5173
 
-/frontend/.env
+# /frontend/.env
 
 VITE_BACKEND_URL = http://localhost:4000
 FRONTEND_URL = http://localhost:5173
