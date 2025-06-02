@@ -16,7 +16,12 @@ import bodyParser from "body-parser";
 // import paymentRouter from "./routes/paymentRoutes.js";
 import chatRouter from "./routes/chatRoutes.js";
 import "./utils/scheduler.js"; // Import the scheduler
-import path from "path"; // Import path module
+
+import { fileURLToPath } from 'url';
+import path from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 import http from "http"; // Import HTTP module
 import { Server } from "socket.io"; // Import Socket.IO
