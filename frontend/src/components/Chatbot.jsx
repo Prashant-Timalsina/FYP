@@ -15,7 +15,7 @@ const Chatbot = ({ onClose }) => {
     setInput("");
 
     try {
-      const res = await axios.post("http://localhost:4000/api/chat", {
+      const res = await axios.post("https://timber-craft.onrender.com/api/chat", {
         message: input,
       });
 

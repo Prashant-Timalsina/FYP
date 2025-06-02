@@ -204,7 +204,7 @@ const Profile = () => {
                 </div>
                 <button
                   onClick={() => {
-                    window.location.href = "http://localhost:5174/";
+                    window.location.href = "https://timber-craft.onrender.com/admin";
                   }}
                   className="mt-4 px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors duration-300"
                 >

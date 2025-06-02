@@ -31,7 +31,7 @@ const ResetPassword = () => {
 
     try {
       const res = await axios.post(
-        "http://localhost:4000/api/user/reset-password",
+        "https://timber-craft.onrender.com/api/user/reset-password",
         {
           token,
           newPassword,

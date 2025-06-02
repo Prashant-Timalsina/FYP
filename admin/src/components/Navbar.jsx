@@ -17,7 +17,7 @@ const Navbar = () => {
   };
 
   const goToFrontend = () => {
-    window.location.href = "http://localhost:5173/login";
+    window.location.href = "https://timber-craft.onrender.com/frontend/login";
   };
 
   return (
