@@ -10,7 +10,8 @@ const createToken = (id, role) => {
   return jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: "15h" });
 };
 
-const passwordValidation = /^(?=.*[A-Z])(?=.*\d)[A-Za-z\d]+$/;
+// Allow any character, require at least 1 uppercase and 1 digit, min 6 chars
+const passwordValidation = /^(?=.*[A-Z])(?=.*\d).{6,}$/;
 
 export const createUser = async (req, res) => {
   try {
