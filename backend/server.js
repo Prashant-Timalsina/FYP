@@ -16,6 +16,7 @@ import bodyParser from "body-parser";
 // import paymentRouter from "./routes/paymentRoutes.js";
 import chatRouter from "./routes/chatRoutes.js";
 import "./utils/scheduler.js"; // Import the scheduler
+import path from "path"; // Import path module
 
 import http from "http"; // Import HTTP module
 import { Server } from "socket.io"; // Import Socket.IO
@@ -33,6 +34,22 @@ app.use(bodyParser.json());
 
 app.use(cors());
 
+
+// Build static files from the React app
+app.use("/frontend", express.static(path.join(__dirname,'user-ui')));
+app.get("/frontend", (req, res) => {
+  res.sendFile(path.join(__dirname, 'user-ui', 'index.html'));
+}
+);
+
+// Serve static files from the React app
+app.use("/admin", express.static(path.join(__dirname, 'admin-ui')));
+app.get("/admin", (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin-ui', 'index.html'));
+}
+);
+
+
 //Routes
 app.post("/send-email", sendEmail);
 
@@ -46,7 +63,6 @@ app.use("/api/order", orderRouter);
 app.use("/api/fav", favRouter);
 app.use("/api/feedback", feedbackRouter);
 // app.use("/api/payment", paymentRouter);
-
 app.use("/api/chat", chatRouter);
 
 app.get("/", (req, res) => {
