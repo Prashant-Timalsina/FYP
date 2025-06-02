@@ -228,14 +228,14 @@ const Home = () => {
 
   if (loading) {
     return (
-      <div className="p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-screen flex items-center justify-center">
+      <div className="p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-[85vh] flex items-center justify-center">
         <div className="text-xl">Loading dashboard data...</div>
       </div>
     );
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-screen w-full">
+    <div className="p-4 sm:p-6 lg:p-8 bg-gray-50 min-h-[85vh] w-full">
       <div className="w-full max-w-screen-xl mx-auto">
         <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
         <div className="flex flex-col lg:flex-row gap-6">

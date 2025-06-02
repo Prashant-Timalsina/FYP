@@ -61,7 +61,7 @@ const AddWood = () => {
         setPrice(0);
         setAdvantages([""]);
         setImage1(null); // Reset image after successful save
-        navigate("/add");
+        navigate("/list");
       } else {
         toast.error(response.data.message);
       }

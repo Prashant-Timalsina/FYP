@@ -439,7 +439,7 @@ const CustomProduct = () => {
                 </option>
                 {categories.map((cat) => (
                   <option key={cat._id} value={cat._id}>
-                    {cat.name}: {cat.price}
+                    {cat.name}: NRs.{cat.price}
                   </option>
                 ))}
               </select>
@@ -458,7 +458,7 @@ const CustomProduct = () => {
                 </option>
                 {woods.map((wood) => (
                   <option key={wood._id} value={wood._id}>
-                    {wood.name}: {wood.price}
+                    {wood.name}: NRs.{wood.price}
                   </option>
                 ))}
               </select>
@@ -479,6 +479,7 @@ const CustomProduct = () => {
                   min="0"
                   className="w-full px-3 py-2 border rounded-md"
                   onChange={(e) => setter(e.target.value)}
+                  required
                 />
               </div>
             ))}
@@ -494,7 +495,8 @@ const CustomProduct = () => {
               Calculate Price
             </button>
             <span className="text-lg font-semibold">
-              Price: <span className="underline font-bold px-3">{price}</span>
+              Price: NRs.
+              <span className="underline font-bold px-3">{price}</span>
             </span>
           </div>
 

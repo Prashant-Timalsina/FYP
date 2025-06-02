@@ -38,7 +38,7 @@ const AddCategory = () => {
         setImage(false);
         setDescription("");
         setPrice(0);
-        navigate("/add");
+        navigate("/list");
       } else {
         toast.error(response.data.message);
       }

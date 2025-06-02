@@ -132,7 +132,7 @@ const AddProduct = () => {
         setLength("");
         setBreadth("");
         setHeight("");
-        navigate("/add");
+        navigate("/list");
       } else {
         toast.error(response.data.message);
       }

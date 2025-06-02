@@ -9,6 +9,7 @@ const Navbar = () => {
   const [visible, setVisible] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false); // NEW
   const location = useLocation();
   const isCollectionPage = location.pathname === "/collection";
 
@@ -86,55 +87,73 @@ const Navbar = () => {
         </div>
 
         <div className="relative">
-          {token ? (
-            <>
-              <img
-                src={assets.profile}
-                className="w-6 cursor-pointer"
-                alt="Profile icon"
-                onClick={() => setVisible(!visible)}
-              />
-              {visible && (
-                <div className="absolute right-0 pt-3 z-50">
-                  <div className="flex flex-col px-5 gap-2 w-32 bg-slate-200 rounded">
-                    <p
-                      onClick={() => {
-                        navigate("/profile");
-                        setVisible(false);
-                      }}
-                      className="cursor-pointer hover:underline"
-                    >
-                      My Profile
-                    </p>
-                    <p
-                      className="cursor-pointer hover:underline"
-                      onClick={() => {
-                        navigate("/orders");
-                        setVisible(false);
-                      }}
-                    >
-                      Orders
-                    </p>
-                    <p
-                      onClick={() => {
-                        logOut();
-                        setVisible(false);
-                      }}
-                      className="cursor-pointer hover:underline"
-                    >
-                      Log Out
-                    </p>
-                  </div>
+          <img
+            src={assets.profile}
+            className="w-8 h-8 rounded-full cursor-pointer border border-gray-300"
+            alt="Profile icon"
+            onClick={() => {
+              if (token) setVisible((v) => !v);
+              else navigate("/login");
+            }}
+          />
+          {token && visible && (
+            <div className="absolute right-0 mt-2 w-40 bg-white rounded shadow-lg z-50 py-2">
+              <button
+                onClick={() => {
+                  navigate("/profile");
+                  setVisible(false);
+                }}
+                className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+              >
+                My Profile
+              </button>
+              <button
+                onClick={() => {
+                  navigate("/orders");
+                  setVisible(false);
+                }}
+                className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+              >
+                Orders
+              </button>
+              <hr className="my-1" />
+              <button
+                onClick={() => {
+                  setShowLogoutConfirm(true); // Show confirmation popup
+                  setVisible(false);
+                }}
+                className="block w-full text-left px-4 py-2 text-red-600 hover:bg-gray-100"
+              >
+                Log Out
+              </button>
+            </div>
+          )}
+          {/* Logout Confirmation Popup */}
+          {showLogoutConfirm && (
+            <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30">
+              <div className="bg-white rounded shadow-lg p-6 w-80">
+                <p className="mb-4 text-gray-800 text-center">
+                  Are you sure you want to log out?
+                </p>
+                <div className="flex justify-center gap-6">
+                  <button
+                    onClick={() => {
+                      logOut();
+                      setShowLogoutConfirm(false);
+                    }}
+                    className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+                  >
+                    Yes
+                  </button>
+                  <button
+                    onClick={() => setShowLogoutConfirm(false)}
+                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+                  >
+                    No
+                  </button>
                 </div>
-              )}
-            </>
-          ) : (
-            <img
-              src={assets.profile}
-              className="w-6 cursor-pointer"
-              alt="Profile icon"
-              onClick={() => navigate("/login")}
-            />
+              </div>
+            </div>
           )}
         </div>
 

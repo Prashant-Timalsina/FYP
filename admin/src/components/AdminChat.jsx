@@ -100,7 +100,7 @@ const AdminChat = () => {
   };
 
   return (
-    <div className="flex h-screen w-full bg-gray-100 overflow-hidden">
+    <div className="flex h-[80vh] w-full bg-gray-100 overflow-hidden">
       {/* Chat List */}
       <div className="w-1/3 max-w-sm bg-white border-r shadow-sm h-full flex flex-col">
         <div className="p-4 border-b">

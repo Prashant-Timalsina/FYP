@@ -13,6 +13,13 @@ const UserList = () => {
     userId: null,
   });
 
+  // New: State for role change dialog
+  const [roleDialog, setRoleDialog] = useState({
+    open: false,
+    userId: null,
+    action: null,
+  });
+
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -59,12 +66,6 @@ const UserList = () => {
   };
 
   const handleRemoveUser = async (userId) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to remove this user? This action cannot be undone."
-      )
-    )
-      return;
     try {
       const response = await axios.delete(
         `${backendUrl}/api/user/remove/${userId}`,
@@ -73,6 +74,7 @@ const UserList = () => {
       if (response.data.success) {
         toast.success(response.data.message || "User removed successfully.");
         setUsers((prev) => prev.filter((u) => u._id !== userId));
+        window.location.reload();
       } else {
         toast.error(response.data.message || "Failed to remove user.");
       }
@@ -113,8 +115,6 @@ const UserList = () => {
                     </span>
                   )}
                 </p>
-
-                {/* Email: show on md+ screens only */}
                 <p className="text-gray-500 text-xs mt-1 hidden md:block lg:block">
                   {user.email}
                 </p>
@@ -125,7 +125,13 @@ const UserList = () => {
               {user.role === "user" && (
                 <button
                   className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-xs"
-                  onClick={() => handleRoleChange(user._id, "promote")}
+                  onClick={() =>
+                    setRoleDialog({
+                      open: true,
+                      userId: user._id,
+                      action: "promote",
+                    })
+                  }
                 >
                   Promote
                 </button>
@@ -134,7 +140,13 @@ const UserList = () => {
                 localStorage.getItem("role") === "superadmin" && (
                   <button
                     className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs"
-                    onClick={() => handleRoleChange(user._id, "demote")}
+                    onClick={() =>
+                      setRoleDialog({
+                        open: true,
+                        userId: user._id,
+                        action: "demote",
+                      })
+                    }
                   >
                     Demote
                   </button>
@@ -171,13 +183,45 @@ const UserList = () => {
                   setRemoveDialog({ open: false, userId: null });
                 }}
               >
-                Remove Account
+                Yes
               </button>
               <button
                 className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 font-bold"
                 onClick={() => setRemoveDialog({ open: false, userId: null })}
               >
-                Cancel
+                No
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Role Change Dialog */}
+      {roleDialog.open && (
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-40">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-80 flex flex-col items-center">
+            <p className="mb-4 text-center text-lg font-semibold text-yellow-700">
+              {roleDialog.action === "promote"
+                ? "Are you sure you want to promote this user to admin?"
+                : "Are you sure you want to demote this admin to user?"}
+            </p>
+            <div className="flex gap-4 w-full justify-center">
+              <button
+                className="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700 font-bold"
+                onClick={() => {
+                  handleRoleChange(roleDialog.userId, roleDialog.action);
+                  setRoleDialog({ open: false, userId: null, action: null });
+                }}
+              >
+                Yes
+              </button>
+              <button
+                className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 font-bold"
+                onClick={() =>
+                  setRoleDialog({ open: false, userId: null, action: null })
+                }
+              >
+                No
               </button>
             </div>
           </div>
