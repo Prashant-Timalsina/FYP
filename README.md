@@ -1,95 +1,100 @@
 # Timber Craft
 
-**Furniture E-Commerce with Custom Carpentry Services**
+A full-stack furniture e-commerce platform and custom carpentry service management system. Developed as a Final Year Project (FYP) at Herald College, Kathmandu.
+
+## Project Overview
+
+**Timber Craft** bridges the gap between traditional carpentry and modern e-commerce. It allows users to not only purchase ready-made furniture but also request bespoke pieces tailored to specific requirements. This project was presented in its current state for the official viva and project showcase, representing the culmination of two semesters of development.
 
 ---
 
-## Overview
+## Key Features
 
-**Timber Craft** is a full-fledged furniture e-commerce platform developed as my Final Year Project (FYP) at Herald College, Kathmandu. Over the course of my last two semesters, I dedicated extensive effort to designing and building this platform, which uniquely combines online furniture sales with custom carpentry services and personalized ordering options.
+### User Experience
+- **Furniture Marketplace:** Browse, filter, and purchase a diverse range of furniture products.
+- **Custom Carpentry Requests:** A dedicated interface for customers to submit specifications for bespoke designs.
+- **Order Tracking:** Real-time status updates and comprehensive transaction management.
+- **Responsive UI:** Fully optimized for mobile, tablet, and desktop viewing.
 
-This project was presented exactly as it is during the viva and project showcase, without any post-presentation modifications or tinkering. It is now fully deployed and hosted for real-world use.
-
----
-
-## Features
-
-- **E-Commerce Furniture Store:** Browse and purchase a wide variety of furniture products.
-- **Custom Ordering:** Customers can request custom furniture tailored to their specifications, bridging the gap between traditional carpentry and modern e-commerce.
-- **Carpentry Service Integration:** Directly connect with skilled carpenters for bespoke design and craftsmanship.
-- **User Roles:** Includes different user roles such as customers, sellers, and administrators for smooth platform management.
-- **Order Tracking & Management:** Seamlessly track order status and manage transactions.
-- **Secure Payment Options:** Integrated with reliable payment gateways for secure online transactions.
-- **Responsive Design:** Mobile-friendly and accessible on various devices.
+### Admin & Operations
+- **Multi-Role System:** Distinct workflows for Customers, Sellers, and Administrators.
+- **Service Integration:** Backend logic to connect customers with skilled craftsmen.
+- **Secure Payments:** Integrated with local payment gateways (eSewa, Khalti) for the Nepali market.
+- **Media Management:** Automated image handling via Cloudinary.
 
 ---
 
-## Technologies Used
+## Tech Stack
 
-- Frontend: React.js, Tailwind CSS  
-- Backend: Node.js, Express.js  
-- Database: MongoDB  
-- Cloud Storage: Cloudinary (for image hosting)  
-- Payment Integration: E-Sewa, Khalti  
-- API Testing: Postman  
-- Version Control: Git & GitHub  
+| Layer | Technology |
+| :--- | :--- |
+| **Frontend** | React.js, Tailwind CSS |
+| **Backend** | Node.js, Express.js |
+| **Database** | MongoDB |
+| **Storage** | Cloudinary |
+| **Payment** | eSewa, Khalti |
+| **Testing** | Postman |
 
 ---
 
-## Installation & Deployment
+## Architecture & Environment Setup
 
+### 1. Installation
 ```bash
 # Clone the repository
-git clone https://github.com/Prashant-Timalsina/FYP.git
-
-# Navigate to the project directory
+git clone [https://github.com/Prashant-Timalsina/FYP.git](https://github.com/Prashant-Timalsina/FYP.git)
 cd FYP
 
-# Install dependencies for backend and frontend (assuming separate folders)
+# Install dependencies (ensure you run this in both /backend and /frontend if separated)
 npm install
-
-# Run backend server
-npm run server
-
-# Run frontend development server
-npm run dev
-
-# Open the application at:
-http://localhost:4000
 ```
 
-### Environment Variables
+### 2. Configuration
 
-Create a `.env` file in the root directory based on `.env.example`, and provide your environment-specific values:
+Create a `.env` file in the respective directories based on the requirements below:
 
-# /admin/.env
-
-VITE_BACKEND_URL =
-
-# /backend/.env
-
-MONGODB_URI = 
-
-CLOUDINARY_API_KEY = 
-
-CLOUDINARY_SECRET_KEY = 
-
-CLOUDINARY_NAME = 
+#### Backend (`/backend/.env`)
+```env
+MONGODB_URI = your_mongodb_uri
+CLOUDINARY_API_KEY = your_key
+CLOUDINARY_SECRET_KEY = your_secret
+CLOUDINARY_NAME = your_cloud_name
 
 ADMIN_EMAIL = "admin@timber.com"
-ADMIN_PASSWORD = "12abcd"
+ADMIN_PASSWORD = "your_secure_password"
 
-JWT_SECRET = 
+JWT_SECRET = your_jwt_token
+EMAIL_USER = your_smtp_user
+EMAIL_PASS = your_smtp_password
 
-EMAIL_USER= 
-EMAIL_PASS= 
+FRONTEND_URL = http://localhost:5173
+```
 
-FRONTEND_URL=http://localhost:5173
+#### Frontend (`/frontend/.env`)
 
-# /frontend/.env
-
+```env
 VITE_BACKEND_URL = http://localhost:4000
 FRONTEND_URL = http://localhost:5173
+REACT_APP_ESEWA_PAYMENT_URL = [https://rc-epay.esewa.com.np/api/epay/main](https://rc-epay.esewa.com.np/api/epay/main)
+```
 
-REACT_APP_ESEWA_PAYMENT_URL=https://rc-epay.esewa.com.np/api/epay/main
+### 3. Execution
 
+```bash
+# Start the backend server
+npm run server
+
+# Start the frontend development environment
+npm run dev
+```
+---
+
+## Development Context
+
+* **Institution:** Herald College, Kathmandu
+* **Timeline:** Developed over two academic semesters.
+* **Status:** Finalized and hosted. This repository reflects the version verified during the official academic viva.
+
+---
+
+**Developed by [Prashant-Timalsina](https://github.com/Prashant-Timalsina)**
